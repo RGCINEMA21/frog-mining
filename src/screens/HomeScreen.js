@@ -28,8 +28,10 @@ export class HomeScreen {
 
       <div class="home-center">
         <div class="frog-container" id="frog-container">
+          <div class="frog-ring frog-ring-1"></div>
+          <div class="frog-ring frog-ring-2"></div>
           <div class="frog-glow" id="frog-glow"></div>
-          <div class="frog-head" id="frog-head">🐸</div>
+          <div class="frog-head" id="frog-head"><img src="/frog-mining/assets/images/frog-tap.png" alt="Frog" class="frog-img" draggable="false" /></div>
           <div class="frog-shadow"></div>
         </div>
       </div>
@@ -79,6 +81,7 @@ export class HomeScreen {
     this._animateFrog();
     this._animateFloatingPlus();
     this._animateGlow();
+    this._spawnParticles();
   }
 
   _animateFrog() {
@@ -107,7 +110,24 @@ export class HomeScreen {
     glow.classList.remove('glow-pulse');
     void glow.offsetWidth;
     glow.classList.add('glow-pulse');
-    setTimeout(() => glow.classList.remove('glow-pulse'), 200);
+    setTimeout(() => glow.classList.remove('glow-pulse'), 300);
+  }
+
+  _spawnParticles() {
+    const container = this.el?.querySelector('#frog-container');
+    if (!container) return;
+    const colors = ['#F0C040', '#48BFE3', '#74C69D', '#F4845F', '#7B68EE'];
+    for (let i = 0; i < 4; i++) {
+      const p = document.createElement('div');
+      p.className = 'frog-particle';
+      const angle = (Math.PI * 2 * i) / 4 + Math.random() * 0.5;
+      const dist = 40 + Math.random() * 30;
+      p.style.setProperty('--dx', Math.cos(angle) * dist + 'px');
+      p.style.setProperty('--dy', Math.sin(angle) * dist + 'px');
+      p.style.background = colors[i % colors.length];
+      container.appendChild(p);
+      setTimeout(() => p.remove(), 500);
+    }
   }
 
   updateScore(score) {

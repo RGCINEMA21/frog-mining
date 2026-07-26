@@ -10,9 +10,7 @@
   padding: var(--space-md) var(--space-md) 0;
 }
 
-.home-stat {
-  text-align: center;
-}
+.home-stat { text-align: center; }
 
 .home-stat-value {
   font-family: var(--font-family-display);
@@ -38,6 +36,8 @@
   margin-top: 2px;
 }
 
+/* ═══ Frog Center ═══ */
+
 .home-center {
   flex: 1;
   display: flex;
@@ -51,299 +51,186 @@
   display: flex;
   align-items: center;
   justify-content: center;
+  width: 220px;
+  height: 220px;
 }
+
+/* ── Rings ── */
+
+.frog-ring {
+  position: absolute;
+  border-radius: 50%;
+  border: 2px solid rgba(240, 192, 64, 0.15);
+  pointer-events: none;
+}
+
+.frog-ring-1 {
+  width: 240px;
+  height: 240px;
+  animation: ringPulse 3s ease-in-out infinite;
+}
+
+.frog-ring-2 {
+  width: 280px;
+  height: 280px;
+  animation: ringPulse 3s ease-in-out infinite 1.5s;
+}
+
+@keyframes ringPulse {
+  0%, 100% { opacity: 0.3; transform: scale(1); }
+  50% { opacity: 0.6; transform: scale(1.05); }
+}
+
+/* ── Glow ── */
 
 .frog-glow {
   position: absolute;
-  width: 200px;
-  height: 200px;
-  background: radial-gradient(circle, rgba(212, 160, 23, 0.1) 0%, transparent 70%);
+  width: 220px;
+  height: 220px;
+  background: radial-gradient(circle, rgba(240, 192, 64, 0.12) 0%, transparent 65%);
   border-radius: 50%;
+  pointer-events: none;
   transition: opacity 0.2s ease;
 }
 
 .frog-glow.glow-pulse {
-  background: radial-gradient(circle, rgba(212, 160, 23, 0.3) 0%, transparent 70%);
+  background: radial-gradient(circle, rgba(240, 192, 64, 0.35) 0%, transparent 65%);
+  animation: glowBurst 0.3s ease-out;
 }
 
+@keyframes glowBurst {
+  0% { transform: scale(1); opacity: 1; }
+  100% { transform: scale(1.3); opacity: 0; }
+}
+
+/* ── Frog Head ── */
+
 .frog-head {
-  font-size: 140px;
+  position: relative;
+  z-index: 2;
   cursor: pointer;
   user-select: none;
   -webkit-user-select: none;
   -webkit-tap-highlight-color: transparent;
-  filter: drop-shadow(0 8px 24px rgba(27, 67, 50, 0.5));
-  animation: frog-idle 2s ease-in-out infinite;
-  transition: transform 0.1s ease;
-  z-index: 2;
+  width: 160px;
+  height: 160px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  animation: frogIdle 2.5s ease-in-out infinite;
+  filter: drop-shadow(0 8px 24px rgba(27, 67, 50, 0.6))
+          drop-shadow(0 0 20px rgba(116, 198, 157, 0.3));
+  transition: filter 0.15s ease;
 }
 
 .frog-head:active {
-  transform: scale(0.95);
+  filter: drop-shadow(0 4px 12px rgba(27, 67, 50, 0.8))
+          drop-shadow(0 0 30px rgba(240, 192, 64, 0.5));
 }
+
+.frog-img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  pointer-events: none;
+}
+
+/* ── Tap Bounce ── */
 
 .frog-head.frog-tap {
-  animation: frogTap 0.3s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+  animation: frogTapBounce 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 
-.frog-shadow {
-  position: absolute;
-  bottom: -10px;
-  width: 80px;
-  height: 16px;
-  background: rgba(0, 0, 0, 0.2);
-  border-radius: 50%;
-  filter: blur(4px);
-  z-index: 1;
+@keyframes frogIdle {
+  0%, 100% { transform: translateY(0) scale(1); }
+  50% { transform: translateY(-10px) scale(1.02); }
 }
 
-.floating-plus {
-  position: absolute;
-  top: 0;
-  font-family: var(--font-family-display);
-  font-size: var(--font-size-xl);
-  font-weight: 700;
-  color: var(--color-accent-gold-light);
-  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
-  pointer-events: none;
-  z-index: 10;
-  animation: floatingPlus 0.8s ease-out forwards;
-}
-
-.score-pulse {
-  animation: scorePulse 0.2s ease-out;
-}
-
-.home-bottom {
-  padding: 0 var(--space-md) var(--space-md);
-}
-
-.mining-bar {
-  background: rgba(0, 0, 0, 0.3);
-  border-radius: var(--radius-md);
-  padding: var(--space-sm) var(--space-md);
-}
-
-.mining-bar.hidden {
-  display: none;
-}
-
-.mining-header {
-  display: flex;
-  align-items: center;
-  gap: var(--space-sm);
-  margin-bottom: var(--space-xs);
-  font-size: var(--font-size-sm);
-}
-
-.mining-time {
-  margin-left: auto;
-  font-weight: 600;
-}
-
-.mining-progress {
-  height: 6px;
-  background: rgba(255, 255, 255, 0.1);
-  border-radius: var(--radius-full);
-  overflow: hidden;
-}
-
-.mining-fill {
-  height: 100%;
-  background: linear-gradient(90deg, var(--color-accent-success), var(--color-accent-crystal));
-  border-radius: var(--radius-full);
-  transition: width 1s linear;
-}
-
-/* ═══ Animations ═══ */
-
-@keyframes frog-idle {
-  0%, 100% { transform: translateY(0); }
-  50% { transform: translateY(-8px); }
-}
-
-@keyframes frogTap {
+@keyframes frogTapBounce {
   0% { transform: scale(1); }
-  25% { transform: scale(0.88); }
-  50% { transform: scale(1.1); }
-  75% { transform: scale(0.97); }
+  15% { transform: scale(0.82) rotate(-3deg); }
+  40% { transform: scale(1.12) rotate(2deg); }
+  60% { transform: scale(0.95) rotate(-1deg); }
+  80% { transform: scale(1.03); }
   100% { transform: scale(1); }
 }
 
+/* ── Shadow ── */
+
+.frog-shadow {
+  position: absolute;
+  bottom: 0;
+  width: 100px;
+  height: 18px;
+  background: rgba(0, 0, 0, 0.25);
+  border-radius: 50%;
+  filter: blur(6px);
+  z-index: 1;
+  animation: shadowIdle 2.5s ease-in-out infinite;
+}
+
+@keyframes shadowIdle {
+  0%, 100% { transform: scaleX(1); opacity: 0.25; }
+  50% { transform: scaleX(0.85); opacity: 0.15; }
+}
+
+/* ── Floating +1 ── */
+
+.floating-plus {
+  position: absolute;
+  top: 10px;
+  font-family: var(--font-family-display);
+  font-size: 28px;
+  font-weight: 800;
+  color: var(--color-accent-gold-light);
+  text-shadow: 0 2px 8px rgba(212, 160, 23, 0.6), 0 0 16px rgba(240, 192, 64, 0.3);
+  pointer-events: none;
+  z-index: 10;
+  animation: floatingPlus 0.9s cubic-bezier(0.2, 0, 0.3, 1) forwards;
+}
+
 @keyframes floatingPlus {
-  0% {
-    opacity: 1;
-    transform: translateY(0) scale(1);
-  }
-  50% {
-    opacity: 1;
-    transform: translateY(-30px) scale(1.2);
-  }
-  100% {
-    opacity: 0;
-    transform: translateY(-60px) scale(0.8);
-  }
+  0% { opacity: 1; transform: translateY(0) scale(0.5); }
+  20% { opacity: 1; transform: translateY(-10px) scale(1.2); }
+  100% { opacity: 0; transform: translateY(-70px) scale(0.7); }
+}
+
+/* ── Particles ── */
+
+.frog-particle {
+  position: absolute;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  pointer-events: none;
+  z-index: 10;
+  left: 50%;
+  top: 50%;
+  animation: particleBurst 0.5s cubic-bezier(0.2, 0, 0.4, 1) forwards;
+}
+
+@keyframes particleBurst {
+  0% { opacity: 1; transform: translate(0, 0) scale(1); }
+  100% { opacity: 0; transform: translate(var(--dx), var(--dy)) scale(0); }
+}
+
+/* ── Score Pulse ── */
+
+.score-pulse {
+  animation: scorePulse 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 
 @keyframes scorePulse {
   0% { transform: scale(1); }
-  50% { transform: scale(1.15); }
+  50% { transform: scale(1.2); }
   100% { transform: scale(1); }
 }
 
-/* ═══ Auto Mining Activation ═══ */
+/* ═══ Bottom ═══ */
 
-.mining-activate {
-  padding: var(--space-md);
+.home-bottom {
+  padding: 0 var(--space-md) var(--space-md);
 }
-
-.mining-activate.hidden {
-  display: none;
-}
-
-.mining-activate-title {
-  font-family: var(--font-family-display);
-  font-size: var(--font-size-lg);
-  text-align: center;
-  margin-bottom: var(--space-xs);
-}
-
-.mining-activate-subtitle {
-  font-size: var(--font-size-sm);
-  color: var(--color-text-secondary);
-  text-align: center;
-  margin-bottom: var(--space-md);
-}
-
-.mining-packages {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-sm);
-}
-
-.mining-package {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  background: rgba(255, 255, 255, 0.08);
-  border-radius: var(--radius-md);
-  padding: var(--space-md);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  transition: border-color 0.2s ease;
-}
-
-.mining-package.disabled {
-  opacity: 0.5;
-}
-
-.mining-package:not(.disabled):active {
-  border-color: var(--color-accent-success);
-}
-
-.mining-package-info {
-  flex: 1;
-}
-
-.mining-package-name {
-  font-weight: 700;
-  font-size: var(--font-size-base);
-  margin-bottom: var(--space-xs);
-}
-
-.mining-package-details {
-  display: flex;
-  gap: var(--space-md);
-  font-size: var(--font-size-sm);
-  color: var(--color-text-secondary);
-}
-
-.mining-package-score {
-  color: var(--color-accent-gold-light);
-}
-
-.mining-package-price {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-end;
-  gap: var(--space-xs);
-}
-
-.mining-diamond {
-  font-weight: 700;
-  color: var(--color-accent-crystal);
-}
-
-.mining-buy-btn {
-  font-size: var(--font-size-sm) !important;
-  padding: var(--space-xs) var(--space-sm) !important;
-}
-
-.mining-buy-btn:disabled {
-  background: rgba(255, 255, 255, 0.1) !important;
-  color: var(--color-text-muted) !important;
-  cursor: not-allowed !important;
-}
-
-/* ═══ Auto Mining Status ═══ */
-
-.mining-status {
-  background: rgba(0, 0, 0, 0.3);
-  border-radius: var(--radius-md);
-  padding: var(--space-md);
-  border: 1px solid var(--color-accent-success);
-}
-
-.mining-status.hidden {
-  display: none;
-}
-
-.mining-status-header {
-  display: flex;
-  align-items: center;
-  gap: var(--space-sm);
-  margin-bottom: var(--space-sm);
-}
-
-.mining-status-icon {
-  font-size: 16px;
-}
-
-.mining-status-title {
-  font-weight: 700;
-  font-size: var(--font-size-sm);
-  color: var(--color-accent-success);
-}
-
-.mining-status-timer {
-  font-family: var(--font-family-display);
-  font-size: var(--font-size-2xl);
-  text-align: center;
-  font-weight: 700;
-  margin-bottom: var(--space-sm);
-}
-
-.mining-progress {
-  height: 6px;
-  background: rgba(255, 255, 255, 0.1);
-  border-radius: var(--radius-full);
-  overflow: hidden;
-  margin-bottom: var(--space-sm);
-}
-
-.mining-fill {
-  height: 100%;
-  background: linear-gradient(90deg, var(--color-accent-success), var(--color-accent-crystal));
-  border-radius: var(--radius-full);
-  transition: width 1s linear;
-}
-
-.mining-status-score {
-  font-size: var(--font-size-sm);
-  color: var(--color-text-secondary);
-  text-align: center;
-}
-
-/* ═══ Mining Row (compact list on Home) ═══ */
 
 .mining-row {
   display: flex;
@@ -362,22 +249,15 @@
   border-color: var(--color-accent-success);
 }
 
-.mining-row.disabled {
-  opacity: 0.4;
-  cursor: not-allowed;
-}
-
-.mining-row.disabled:active {
-  transform: none;
-  border-color: rgba(255, 255, 255, 0.06);
-}
+.mining-row.disabled { opacity: 0.4; cursor: not-allowed; }
+.mining-row.disabled:active { transform: none; }
 
 .mining-row-left {
   display: flex;
   align-items: center;
   gap: var(--space-sm);
-  min-width: 0;
   flex: 1;
+  min-width: 0;
 }
 
 .mining-row-icon {
@@ -392,22 +272,9 @@
   flex-shrink: 0;
 }
 
-.mining-row-info {
-  display: flex;
-  flex-direction: column;
-  min-width: 0;
-}
-
-.mining-row-name {
-  font-weight: 700;
-  font-size: var(--font-size-sm);
-  color: var(--color-text-primary);
-}
-
-.mining-row-detail {
-  font-size: var(--font-size-xs);
-  color: var(--color-text-secondary);
-}
+.mining-row-info { display: flex; flex-direction: column; min-width: 0; }
+.mining-row-name { font-weight: 700; font-size: var(--font-size-sm); color: var(--color-text-primary); }
+.mining-row-detail { font-size: var(--font-size-xs); color: var(--color-text-secondary); }
 
 .mining-row-right {
   display: flex;
@@ -425,13 +292,42 @@
   white-space: nowrap;
 }
 
-.mining-row .btn-xs {
-  font-size: 10px !important;
-  padding: 3px 10px !important;
-}
-
+.mining-row .btn-xs { font-size: 10px !important; padding: 3px 10px !important; }
 .mining-row .btn-disabled {
   background: rgba(255, 255, 255, 0.08) !important;
   color: var(--color-text-muted) !important;
   cursor: not-allowed !important;
 }
+
+.mining-activate { padding: var(--space-md) 0; }
+.mining-activate.hidden { display: none; }
+.mining-activate-title { font-family: var(--font-family-display); font-size: var(--font-size-lg); text-align: center; margin-bottom: var(--space-xs); }
+.mining-activate-subtitle { font-size: var(--font-size-sm); color: var(--color-text-secondary); text-align: center; margin-bottom: var(--space-md); }
+.mining-packages { display: flex; flex-direction: column; gap: var(--space-xs); }
+
+.mining-status {
+  background: rgba(0, 0, 0, 0.3);
+  backdrop-filter: blur(8px);
+  border-radius: var(--radius-md);
+  padding: var(--space-md);
+  border: 1px solid var(--color-accent-success);
+}
+
+.mining-status.hidden { display: none; }
+.mining-status-header { display: flex; align-items: center; gap: var(--space-sm); margin-bottom: var(--space-sm); }
+.mining-status-icon { font-size: 16px; }
+.mining-status-title { font-weight: 700; font-size: var(--font-size-sm); color: var(--color-accent-success); }
+
+.mining-status-timer {
+  font-family: var(--font-family-display);
+  font-size: var(--font-size-2xl);
+  text-align: center;
+  font-weight: 700;
+  margin-bottom: var(--space-sm);
+  color: var(--color-accent-gold-light);
+  text-shadow: 0 0 12px rgba(240, 192, 64, 0.3);
+}
+
+.mining-progress { height: 6px; background: rgba(255, 255, 255, 0.1); border-radius: var(--radius-full); overflow: hidden; margin-bottom: var(--space-sm); }
+.mining-fill { height: 100%; background: linear-gradient(90deg, var(--color-accent-success), var(--color-accent-crystal)); border-radius: var(--radius-full); transition: width 1s linear; }
+.mining-status-score { font-size: var(--font-size-sm); color: var(--color-text-secondary); text-align: center; }
