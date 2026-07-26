@@ -342,3 +342,96 @@
   color: var(--color-text-secondary);
   text-align: center;
 }
+
+/* ═══ Mining Row (compact list on Home) ═══ */
+
+.mining-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: rgba(255, 255, 255, 0.08);
+  border-radius: var(--radius-md);
+  padding: var(--space-sm) var(--space-md);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  transition: transform 0.15s ease, border-color 0.2s ease;
+  cursor: pointer;
+}
+
+.mining-row:active {
+  transform: scale(0.98);
+  border-color: var(--color-accent-success);
+}
+
+.mining-row.disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.mining-row.disabled:active {
+  transform: none;
+  border-color: rgba(255, 255, 255, 0.06);
+}
+
+.mining-row-left {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  min-width: 0;
+  flex: 1;
+}
+
+.mining-row-icon {
+  font-size: 20px;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.2);
+  border-radius: var(--radius-sm);
+  flex-shrink: 0;
+}
+
+.mining-row-info {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.mining-row-name {
+  font-weight: 700;
+  font-size: var(--font-size-sm);
+  color: var(--color-text-primary);
+}
+
+.mining-row-detail {
+  font-size: var(--font-size-xs);
+  color: var(--color-text-secondary);
+}
+
+.mining-row-right {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  flex-shrink: 0;
+  margin-left: var(--space-sm);
+}
+
+.mining-row-price {
+  font-family: var(--font-family-display);
+  font-weight: 700;
+  font-size: var(--font-size-sm);
+  color: var(--color-accent-crystal);
+  white-space: nowrap;
+}
+
+.mining-row .btn-xs {
+  font-size: 10px !important;
+  padding: 3px 10px !important;
+}
+
+.mining-row .btn-disabled {
+  background: rgba(255, 255, 255, 0.08) !important;
+  color: var(--color-text-muted) !important;
+  cursor: not-allowed !important;
+}

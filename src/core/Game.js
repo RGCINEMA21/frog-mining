@@ -134,7 +134,7 @@ export class Game {
     this.events.on('route:change', ({ to }) => {
       this.bottomNav.setActive(to.path);
       if (to.name === 'profile') this._updateProfile(profile);
-      if (to.name === 'shop') shop.updateDiamonds(this.gameDataManager.getDiamonds());
+      if (to.name === 'shop') { shop.updateDiamonds(this.gameDataManager.getDiamonds()); this._refreshShopMining(shop); }
       if (to.name === 'leaderboard') this._refreshLeaderboard(leaderboard);
       if (to.name === 'mail') this._refreshMail(mail);
     });
@@ -158,7 +158,7 @@ export class Game {
     // Auto Mining
     this._setupAutoMiningUI(home);
     this.events.on('autoMining:activate', ({ package: pkg }) => {
-      showPopup(pkg.label + ' activated! ⛏️', 'success');
+      showPopup(pkg.name + ' activated! ⛏️', 'success');
       this.soundManager.playReward();
       home.showMiningActive(this.autoMiningManager.getStatus());
     });
@@ -246,6 +246,25 @@ export class Game {
         }
       );
     }
+  }
+
+  _refreshShopMining(shop) {
+    const packages = this.autoMiningManager.getPackages();
+    shop.setMiningData(packages,
+      (price) => this.gameDataManager.canAfford(price),
+      (key) => {
+        const result = this.autoMiningManager.activate(key);
+        if (!result.success) {
+          showPopup(result.error, 'error');
+          this.soundManager.playError();
+        } else {
+          shop.updateDiamonds(this.gameDataManager.getDiamonds());
+          this.header.updateDiamonds(this.gameDataManager.getDiamonds());
+          showPopup('Mining activated! ⛏️', 'success');
+          this.soundManager.playReward();
+        }
+      }
+    );
   }
 
   _updateProfile(screen) {

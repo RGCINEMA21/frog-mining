@@ -38,7 +38,7 @@ export class HomeScreen {
         <div class="mining-status hidden" id="mining-status">
           <div class="mining-status-header">
             <span class="mining-status-icon">⛏️</span>
-            <span class="mining-status-title">Auto Mining Active</span>
+            <span class="mining-status-title" id="mining-pkg-name">Auto Mining Active</span>
           </div>
           <div class="mining-status-timer" id="mining-timer">--:--:--</div>
           <div class="mining-progress">
@@ -56,13 +56,11 @@ export class HomeScreen {
     `;
     container.appendChild(this.el);
 
-    // Bind frog tap — use mousedown for faster response
     const frog = this.el.querySelector('#frog-head');
     frog.addEventListener('mousedown', (e) => {
       e.preventDefault();
       this._handleTap();
     });
-
     frog.addEventListener('touchstart', (e) => {
       e.preventDefault();
       this._handleTap();
@@ -73,8 +71,6 @@ export class HomeScreen {
 
   _handleTap() {
     if (!this._tapEnabled) return;
-
-    // Prevent double-tap (minimum 30ms between taps)
     const now = Date.now();
     if (now - this._lastTap < 30) return;
     this._lastTap = now;
@@ -142,29 +138,28 @@ export class HomeScreen {
     status.classList.add('hidden');
 
     container.innerHTML = packages.map((pkg) => `
-      <div class="mining-package ${!canAfford(pkg.key) ? 'disabled' : ''}" data-package="${pkg.key}">
-        <div class="mining-package-info">
-          <div class="mining-package-name">${pkg.label}</div>
-          <div class="mining-package-details">
-            <span class="mining-package-duration">⏱️ ${pkg.durationFormatted}</span>
-            <span class="mining-package-score">+${pkg.totalScore.toLocaleString()} score</span>
+      <div class="mining-row ${!canAfford(pkg.key) ? 'disabled' : ''}" data-package="${pkg.key}">
+        <div class="mining-row-left">
+          <span class="mining-row-icon">${pkg.icon}</span>
+          <div class="mining-row-info">
+            <span class="mining-row-name">${pkg.name}</span>
+            <span class="mining-row-detail">⏱️ ${pkg.durationFormatted} · +${pkg.totalScore.toLocaleString()}</span>
           </div>
         </div>
-        <div class="mining-package-price">
-          <span class="mining-diamond">💎 ${pkg.price.toLocaleString()}</span>
-          <button class="btn btn-sm btn-primary mining-buy-btn" ${!canAfford(pkg.key) ? 'disabled' : ''}>
-            ${canAfford(pkg.key) ? 'Activate' : 'Need more 💎'}
+        <div class="mining-row-right">
+          <span class="mining-row-price">💎 ${pkg.price.toLocaleString()}</span>
+          <button class="btn btn-xs ${canAfford(pkg.key) ? 'btn-primary' : 'btn-disabled'}" ${!canAfford(pkg.key) ? 'disabled' : ''}>
+            ${canAfford(pkg.key) ? 'Go' : 'Need 💎'}
           </button>
         </div>
       </div>
     `).join('');
 
-    container.querySelectorAll('.mining-buy-btn').forEach((btn) => {
-      btn.addEventListener('click', (e) => {
-        e.stopPropagation();
-        const card = btn.closest('.mining-package');
-        const pkgKey = card?.dataset.package;
-        if (pkgKey && !btn.disabled) onSelect(pkgKey);
+    container.querySelectorAll('.mining-row').forEach((row) => {
+      row.addEventListener('click', (e) => {
+        const key = row.dataset.package;
+        const btn = row.querySelector('button');
+        if (btn && !btn.disabled && onSelect) onSelect(key);
       });
     });
   }
@@ -175,6 +170,11 @@ export class HomeScreen {
     if (!activate || !statusEl) return;
     activate.classList.add('hidden');
     statusEl.classList.remove('hidden');
+
+    const nameEl = this.el?.querySelector('#mining-pkg-name');
+    if (nameEl && status.package) {
+      nameEl.textContent = (status.package.icon || '⛏️') + ' ' + (status.package.name || 'Auto Mining') + ' Active';
+    }
     this._updateMiningTimer(status.remainingMs, status.remainingFormatted);
   }
 
