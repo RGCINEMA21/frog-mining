@@ -31,8 +31,9 @@
 
 .home-stat-label {
   font-size: var(--font-size-xs);
-  color: var(--color-text-muted);
+  color: rgba(255, 255, 255, 0.7);
   letter-spacing: 2px;
+  font-weight: 600;
   margin-top: 2px;
 }
 
@@ -274,7 +275,7 @@
 
 .mining-row-info { display: flex; flex-direction: column; min-width: 0; }
 .mining-row-name { font-weight: 700; font-size: var(--font-size-sm); color: var(--color-text-primary); }
-.mining-row-detail { font-size: var(--font-size-xs); color: var(--color-text-secondary); }
+.mining-row-detail { font-size: var(--font-size-xs); color: rgba(255, 255, 255, 0.8); }
 
 .mining-row-right {
   display: flex;
@@ -302,7 +303,7 @@
 .mining-activate { padding: var(--space-md) 0; }
 .mining-activate.hidden { display: none; }
 .mining-activate-title { font-family: var(--font-family-display); font-size: var(--font-size-lg); text-align: center; margin-bottom: var(--space-xs); }
-.mining-activate-subtitle { font-size: var(--font-size-sm); color: var(--color-text-secondary); text-align: center; margin-bottom: var(--space-md); }
+.mining-activate-subtitle { font-size: var(--font-size-sm); color: rgba(255, 255, 255, 0.8); text-align: center; margin-bottom: var(--space-md); }
 .mining-packages { display: flex; flex-direction: column; gap: var(--space-xs); }
 
 .mining-status {
@@ -330,4 +331,4 @@
 
 .mining-progress { height: 6px; background: rgba(255, 255, 255, 0.1); border-radius: var(--radius-full); overflow: hidden; margin-bottom: var(--space-sm); }
 .mining-fill { height: 100%; background: linear-gradient(90deg, var(--color-accent-success), var(--color-accent-crystal)); border-radius: var(--radius-full); transition: width 1s linear; }
-.mining-status-score { font-size: var(--font-size-sm); color: var(--color-text-secondary); text-align: center; }
+.mining-status-score { font-size: var(--font-size-sm); color: rgba(255, 255, 255, 0.8); text-align: center; }

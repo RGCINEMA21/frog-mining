@@ -40,14 +40,15 @@
 }
 
 .nav-label {
-  font-size: 10px;
-  font-weight: 600;
-  color: var(--color-text-muted);
+  font-size: 11px;
+  font-weight: 700;
+  color: rgba(255, 255, 255, 0.7);
   transition: color 0.2s ease;
 }
 
 .nav-item.active .nav-label {
   color: var(--color-accent-success);
+  text-shadow: 0 1px 4px rgba(116, 198, 157, 0.4);
 }
 
 .nav-item.active {

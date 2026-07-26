@@ -27,9 +27,9 @@
   border: none;
   border-radius: var(--radius-md);
   background: rgba(255, 255, 255, 0.08);
-  color: var(--color-text-secondary);
+  color: rgba(255, 255, 255, 0.8);
   font-family: var(--font-family-display);
-  font-size: var(--font-size-sm);
+  font-size: 14px;
   font-weight: 700;
   cursor: pointer;
   transition: all 0.2s ease;
@@ -154,7 +154,7 @@
 }
 
 .shop-item-desc {
-  font-size: var(--font-size-sm);
+  font-size: 14px;
   color: var(--color-text-on-card);
   opacity: 0.8;
   line-height: 1.3;
@@ -203,6 +203,6 @@
 .shop-empty {
   text-align: center;
   padding: var(--space-xl);
-  color: var(--color-text-muted);
-  font-size: var(--font-size-sm);
+  color: rgba(255, 255, 255, 0.6);
+  font-size: 14px;
 }
