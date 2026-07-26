@@ -1,13 +1,23 @@
 .splash-screen {
-  background: linear-gradient(135deg, var(--color-bg-secondary) 0%, var(--color-bg-primary) 100%);
+  background: url('/frog-mining/assets/bg-fantasy.jpg') center / cover no-repeat;
   display: flex;
   align-items: center;
   justify-content: center;
+  position: relative;
+}
+
+.splash-screen::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: rgba(10, 10, 26, 0.6);
 }
 
 .splash-content {
   text-align: center;
   animation: splashFadeIn 0.6s ease-out;
+  position: relative;
+  z-index: 1;
 }
 
 .splash-frog {
@@ -20,6 +30,7 @@
   font-size: var(--font-size-2xl);
   color: var(--color-accent-gold-light);
   margin-top: var(--space-md);
+  text-shadow: 0 2px 12px rgba(212, 160, 23, 0.5);
 }
 
 .splash-subtitle {
@@ -31,7 +42,7 @@
 .splash-loader {
   width: 120px;
   height: 4px;
-  background: rgba(255, 255, 255, 0.1);
+  background: rgba(255, 255, 255, 0.15);
   border-radius: var(--radius-full);
   margin: var(--space-xl) auto 0;
   overflow: hidden;

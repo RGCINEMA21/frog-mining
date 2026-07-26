@@ -6,8 +6,10 @@
   width: 100%;
   max-width: 480px;
   z-index: var(--z-bottom-nav);
-  background: var(--color-bg-secondary);
-  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(10, 10, 26, 0.80);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
   display: flex;
   justify-content: space-around;
   padding-bottom: var(--safe-area-bottom);
@@ -49,5 +51,5 @@
 }
 
 .nav-item.active {
-  background: rgba(82, 183, 136, 0.1);
+  background: rgba(82, 183, 136, 0.15);
 }
