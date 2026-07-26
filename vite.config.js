@@ -3,6 +3,7 @@ import { resolve } from 'path';
 
 export default defineConfig({
   root: '.',
+  base: '/frog-mining/',
   publicDir: 'public',
   envDir: '.',
   envPrefix: 'VITE_',
