@@ -78,6 +78,7 @@ export class LeaderboardScreen {
    * Update board data from LeaderboardManager.
    */
   updateBoard(data) {
+    // data = { period, board: { entries, playerRank, totalPlayers, rewardPool, countdown } }
     this._boardData[data.period] = data;
     if (data.period === this._activeTab) {
       this._renderBoard();
@@ -98,8 +99,7 @@ export class LeaderboardScreen {
       return;
     }
 
-    const { entries, playerRank, totalPlayers, rewardPool } = data.board;
-    const countdown = data.countdown;
+    const { entries, playerRank, totalPlayers, rewardPool, countdown } = data.board;
 
     // Update countdown
     if (countdownEl && countdown) {

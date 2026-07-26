@@ -37,8 +37,8 @@ export class Game {
 
     this.accountManager = new AccountManager(this.events);
     this.gameDataManager = new GameDataManager(this.events, this.accountManager);
-    this.scoreManager = new ScoreManager(this.events, this.gameDataManager);
-    this.autoMiningManager = new AutoMiningManager(this.events, this.gameDataManager);
+    this.scoreManager = new ScoreManager(this.events, this.gameDataManager, this.accountManager);
+    this.autoMiningManager = new AutoMiningManager(this.events, this.gameDataManager, this.accountManager);
     this.soundManager = new SoundManager(this.events);
     this.leaderboardManager = new LeaderboardManager(this.events, this.gameDataManager, this.accountManager);
     this.mailManager = new MailManager(this.events, this.gameDataManager, this.accountManager);
@@ -65,7 +65,7 @@ export class Game {
     return this;
   }
 
-  _checkAndRoute(app) {
+  async _checkAndRoute(app) {
     const { hasAccount, account } = this.accountManager.checkSession();
     if (hasAccount && account) {
       this._account = account;
@@ -82,7 +82,7 @@ export class Game {
     landing.show(app);
   }
 
-  _handleRegister(app, username) {
+  async _handleRegister(app, username) {
     const result = this.accountManager.register(username);
     if (!result.success) { showPopup(result.error, 'error'); return; }
     this._account = result.account;
@@ -90,17 +90,18 @@ export class Game {
     this._startGame(app);
   }
 
-  _initManagers() {
+  async _initManagers() {
     this.gameDataManager.init();
     this.scoreManager.init();
     this.autoMiningManager.init();
     this.leaderboardManager.init();
     this.mailManager.init();
     this.soundManager.init();
-    checkAndSendGifts(this.mailManager, this.accountManager);
+    await checkAndSendGifts(this.mailManager, this.accountManager);
+    this.accountManager.syncSession();
   }
 
-  _startGame(app) {
+  async _startGame(app) {
     app.innerHTML = '';
 
     this.header = new Header(app);
@@ -206,11 +207,11 @@ export class Game {
     Logger.info('Game', 'Game started — Welcome ' + this._account.username);
   }
 
-  _refreshLeaderboard(screen) {
+  async _refreshLeaderboard(screen) {
+    await this.leaderboardManager.updateScore(this.scoreManager.getScore());
     ['daily', 'weekly', 'monthly'].forEach((period) => {
       const board = this.leaderboardManager.getBoard(period);
-      const countdown = this.leaderboardManager.getCountdown(period);
-      screen.updateBoard({ period, board, countdown });
+      screen.updateBoard({ period, board });
     });
   }
 
@@ -218,7 +219,7 @@ export class Game {
     screen.updateMails(this.mailManager.getMails());
   }
 
-  _setupAutoMiningUI(home) {
+  async _setupAutoMiningUI(home) {
     const status = this.autoMiningManager.getStatus();
     const packages = this.autoMiningManager.getPackages();
     if (status.active) {
@@ -234,7 +235,7 @@ export class Game {
     }
   }
 
-  _refreshAutoMiningUI(home) {
+  async _refreshAutoMiningUI(home) {
     const status = this.autoMiningManager.getStatus();
     if (!status.active) {
       const packages = this.autoMiningManager.getPackages();

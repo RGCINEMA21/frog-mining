@@ -1,9 +1,9 @@
 import { Config } from '@core/Config.js';
 import { Logger } from '@utils/logger.js';
+import { Api } from '@utils/api.js';
 
 /**
- * GameDataManager — Manages player game data (score, diamond, etc.).
- * Persists to localStorage, syncs with server later.
+ * GameDataManager — Manages player game data with API sync.
  */
 export class GameDataManager {
   constructor(eventBus, accountManager) {
@@ -13,120 +13,86 @@ export class GameDataManager {
     this._data = null;
   }
 
-  /**
-   * Load game data for current player.
-   */
-  init() {
+  async init() {
     const account = this.accountManager.getAccount();
     if (!account) {
       Logger.warn('GameDataManager', 'No account found');
       return;
     }
 
+    // Load local cache first
     this._data = this._load(account.id) || this._createDefault(account.id);
+
+    // Sync with server
+    await this._syncFromServer(account.id);
+
     Logger.info('GameDataManager', 'Loaded data for: ' + account.username);
     this.events.emit('gamedata:init', this._data);
   }
 
-  /**
-   * Get current game data.
-   */
-  getData() {
-    return this._data ? { ...this._data } : null;
+  async _syncFromServer(playerId) {
+    // Fetch score from server
+    const scoreResult = await Api.getScore(playerId);
+    if (scoreResult.success) {
+      this._data.score = scoreResult.data.score;
+    }
+
+    // Fetch auto mining status
+    const miningResult = await Api.getAutoMining(playerId);
+    if (miningResult.success && miningResult.data.active) {
+      this._data.autoMining = {
+        active: true,
+        package: miningResult.data.package,
+        startTime: miningResult.data.startTime,
+        endTime: miningResult.data.endTime,
+      };
+      // Update score from mining
+      this._data.score = miningResult.data.currentScore;
+    }
+
+    this._save();
   }
 
-  /**
-   * Get score.
-   */
-  getScore() {
-    return this._data?.score || 0;
-  }
+  getData() { return this._data ? { ...this._data } : null; }
+  getScore() { return this._data?.score || 0; }
+  getDiamonds() { return this._data?.diamonds || 0; }
+  getTaps() { return this._data?.totalTaps || 0; }
 
-  /**
-   * Get diamond balance.
-   */
-  getDiamonds() {
-    return this._data?.diamonds || 0;
-  }
-
-  /**
-   * Get total taps.
-   */
-  getTaps() {
-    return this._data?.totalTaps || 0;
-  }
-
-  /**
-   * Add score from tap.
-   */
   addScore(amount = 1) {
     if (!this._data || amount <= 0) return false;
     this._data.score += amount;
     this._data.totalTaps += amount;
     this._save();
-    this.events.emit('gamedata:scoreChange', {
-      score: this._data.score,
-      amount,
-      source: 'tap',
-    });
+    this.events.emit('gamedata:scoreChange', { score: this._data.score, amount, source: 'tap' });
     return true;
   }
 
-  /**
-   * Add score from auto mining.
-   */
   addScoreFromAutoMining(amount = 1) {
     if (!this._data || amount <= 0) return false;
     this._data.score += amount;
     this._save();
-    this.events.emit('gamedata:scoreChange', {
-      score: this._data.score,
-      amount,
-      source: 'auto',
-    });
+    this.events.emit('gamedata:scoreChange', { score: this._data.score, amount, source: 'auto' });
     return true;
   }
 
-  /**
-   * Add diamonds (from reward or purchase).
-   */
   addDiamonds(amount, source = 'unknown') {
     if (!this._data || amount <= 0) return false;
     this._data.diamonds += amount;
     this._save();
-    this.events.emit('gamedata:diamondChange', {
-      diamonds: this._data.diamonds,
-      amount,
-      source,
-    });
+    this.events.emit('gamedata:diamondChange', { diamonds: this._data.diamonds, amount, source });
     return true;
   }
 
-  /**
-   * Spend diamonds (for auto mining, etc).
-   */
   spendDiamonds(amount, purpose = 'unknown') {
     if (!this._data || amount <= 0 || this._data.diamonds < amount) return false;
     this._data.diamonds -= amount;
     this._save();
-    this.events.emit('gamedata:diamondChange', {
-      diamonds: this._data.diamonds,
-      amount: -amount,
-      source: purpose,
-    });
+    this.events.emit('gamedata:diamondChange', { diamonds: this._data.diamonds, amount: -amount, source: purpose });
     return true;
   }
 
-  /**
-   * Check if player can afford a cost.
-   */
-  canAfford(cost) {
-    return this._data ? this._data.diamonds >= cost : false;
-  }
+  canAfford(cost) { return this._data ? this._data.diamonds >= cost : false; }
 
-  /**
-   * Reset game data (for new season, etc).
-   */
   resetScore() {
     if (!this._data) return;
     this._data.score = 0;
@@ -134,25 +100,14 @@ export class GameDataManager {
     this.events.emit('gamedata:scoreReset');
   }
 
-  /**
-   * Create default game data.
-   */
   _createDefault(playerId) {
-    const defaultData = {
-      playerId,
-      score: 0,
-      diamonds: 0,
-      totalTaps: 0,
-      autoMining: {
-        active: false,
-        package: null,
-        startTime: null,
-        endTime: null,
-      },
+    const d = {
+      playerId, score: 0, diamonds: 0, totalTaps: 0,
+      autoMining: { active: false, package: null, startTime: null, endTime: null },
       createdAt: new Date().toISOString(),
     };
-    this._save(defaultData);
-    return defaultData;
+    this._save(d);
+    return d;
   }
 
   _save(data) {

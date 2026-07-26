@@ -2,13 +2,12 @@ import { Logger } from '@utils/logger.js';
 
 /**
  * AdminGift — Developer gift system.
- * Sends special reward mails to specific players.
+ * Sends special reward mails to specific players via API.
  */
-export function checkAndSendGifts(mailManager, accountManager) {
+export async function checkAndSendGifts(mailManager, accountManager) {
   const account = accountManager.getAccount();
   if (!account) return;
 
-  // Developer gift list
   const gifts = {
     'Ruligo21': {
       title: '🎁 Developer Gift',
@@ -22,13 +21,13 @@ export function checkAndSendGifts(mailManager, accountManager) {
   const gift = gifts[account.username];
   if (!gift) return;
 
-  // Check if gift already sent
+  // Check if gift already sent (local check)
   const existing = mailManager.getMails().find(
     (m) => m.title === gift.title && m.category === 'admin'
   );
 
   if (!existing) {
-    mailManager.createMail(gift);
+    await mailManager.createMail(gift);
     Logger.info('AdminGift', 'Gift sent to: ' + account.username);
   }
 }

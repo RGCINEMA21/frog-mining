@@ -1,9 +1,10 @@
 import { Config } from '@core/Config.js';
 import { Logger } from '@utils/logger.js';
+import { Api } from '@utils/api.js';
 import { MailConfig } from './MailConfig.js';
 
 /**
- * MailManager — Handles mail creation, claiming, filtering, and expiry.
+ * MailManager — Handles mail with API sync.
  */
 export class MailManager {
   constructor(eventBus, gameDataManager, accountManager) {
@@ -14,86 +15,76 @@ export class MailManager {
     this._mails = [];
   }
 
-  /**
-   * Initialize — load mails and check expiry.
-   */
-  init() {
+  async init() {
     const account = this.accountManager.getAccount();
     if (!account) return;
 
+    // Load local cache
     this._mails = this._load(account.id);
+
+    // Sync from server
+    await this._syncFromServer(account.id);
+
     this._checkExpiry();
-    this._cleanupExpired();
     Logger.info('MailManager', 'Initialized — ' + this._mails.length + ' mails');
   }
 
-  /**
-   * Get all mails for current player.
-   */
+  async _syncFromServer(playerId) {
+    const result = await Api.getMails(playerId);
+    if (result.success && result.data.mails) {
+      const serverMails = result.data.mails.map((m) => ({
+        id: m.id,
+        playerId: m.player_id,
+        title: m.title,
+        content: m.content,
+        category: m.category,
+        rewardType: m.reward_type,
+        rewardAmount: m.reward_amount,
+        claimStatus: m.claim_status,
+        read: m.claim_status === 'claimed',
+        createdAt: m.created_at,
+        expiresAt: m.expired_at,
+      }));
+
+      // Merge: prefer server data, keep local unclaimed
+      const localUnclaimed = this._mails.filter(
+        (m) => m.claimStatus === 'unclaimed' && !serverMails.find((s) => s.id === m.id)
+      );
+
+      this._mails = [...serverMails, ...localUnclaimed];
+      this._save(playerId);
+    }
+  }
+
   getMails(filter = 'all') {
     let mails = [...this._mails];
-
     switch (filter) {
-      case 'unread':
-        mails = mails.filter((m) => !m.read);
-        break;
-      case 'hasReward':
-        mails = mails.filter((m) => m.rewardType && m.rewardAmount > 0 && m.claimStatus === 'unclaimed');
-        break;
-      case 'claimed':
-        mails = mails.filter((m) => m.claimStatus === 'claimed');
-        break;
-      case 'expired':
-        mails = mails.filter((m) => m.claimStatus === 'expired');
-        break;
+      case 'unread': mails = mails.filter((m) => !m.read); break;
+      case 'hasReward': mails = mails.filter((m) => m.rewardType && m.rewardAmount > 0 && m.claimStatus === 'unclaimed'); break;
+      case 'claimed': mails = mails.filter((m) => m.claimStatus === 'claimed'); break;
+      case 'expired': mails = mails.filter((m) => m.claimStatus === 'expired'); break;
     }
-
-    // Sort by date, newest first
     mails.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
-
     return mails;
   }
 
-  /**
-   * Get a single mail by ID.
-   */
-  getMail(mailId) {
-    return this._mails.find((m) => m.id === mailId) || null;
-  }
+  getMail(mailId) { return this._mails.find((m) => m.id === mailId) || null; }
+  getUnreadCount() { return this._mails.filter((m) => !m.read).length; }
+  getUnclaimedCount() { return this._mails.filter((m) => m.rewardType && m.rewardAmount > 0 && m.claimStatus === 'unclaimed').length; }
 
-  /**
-   * Get unread count.
-   */
-  getUnreadCount() {
-    return this._mails.filter((m) => !m.read).length;
-  }
-
-  /**
-   * Get unclaimed reward count.
-   */
-  getUnclaimedCount() {
-    return this._mails.filter((m) => m.rewardType && m.rewardAmount > 0 && m.claimStatus === 'unclaimed').length;
-  }
-
-  /**
-   * Create a new mail.
-   */
-  createMail({ title, content, category = 'announcement', rewardType = null, rewardAmount = 0, expiryDays = null }) {
+  async createMail({ title, content, category = 'announcement', rewardType = null, rewardAmount = 0, expiryDays = null }) {
     const account = this.accountManager.getAccount();
     if (!account) return null;
 
-    // Check max mails
-    if (this._mails.length >= MailConfig.MAX_MAILS) {
-      // Remove oldest read/expired mails
-      this._cleanupOldest();
-    }
+    // Create on server
+    const result = await Api.createMail(account.id, title, content, category, rewardType, rewardAmount);
 
     const now = new Date();
     const expiry = expiryDays ?? MailConfig.DEFAULT_EXPIRY_DAYS;
     const expiresAt = expiry > 0 ? new Date(now.getTime() + expiry * 24 * 60 * 60 * 1000).toISOString() : null;
 
     const mail = {
-      id: this._generateUUID(),
+      id: result.success ? result.data.mailId : this._generateUUID(),
       playerId: account.id,
       title,
       content,
@@ -108,159 +99,75 @@ export class MailManager {
 
     this._mails.unshift(mail);
     this._save(account.id);
-
     this.events.emit('mail:new', { mail });
-    Logger.info('Mail', 'Created: ' + title + ' (' + category + ')');
     return mail;
   }
 
-  /**
-   * Mark mail as read.
-   */
   markRead(mailId) {
     const mail = this._mails.find((m) => m.id === mailId);
     if (!mail) return false;
-
     mail.read = true;
     this._save(this.accountManager.getAccount()?.id);
-    this.events.emit('mail:read', { mailId });
     return true;
   }
 
-  /**
-   * Claim reward from mail.
-   * @returns {{ success: boolean, error?: string, reward?: number }}
-   */
-  claimReward(mailId) {
+  async claimReward(mailId) {
     const mail = this._mails.find((m) => m.id === mailId);
-    if (!mail) {
-      return { success: false, error: 'Mail not found' };
+    if (!mail) return { success: false, error: 'Mail not found' };
+    if (!mail.rewardType || mail.rewardAmount <= 0) return { success: false, error: 'No reward' };
+    if (mail.claimStatus === 'claimed') return { success: false, error: 'Already claimed' };
+    if (mail.claimStatus === 'expired') return { success: false, error: 'Expired' };
+
+    const account = this.accountManager.getAccount();
+
+    // Claim on server
+    const result = await Api.claimMail(account.id, mailId);
+    if (result.success) {
+      // Update local diamonds from server
+      this.gameDataManager.addDiamonds(mail.rewardAmount, 'mail');
+      mail.claimStatus = 'claimed';
+      mail.read = true;
+      this._save(account.id);
+      this.events.emit('mail:claim', { mailId, reward: mail.rewardAmount });
+      return { success: true, reward: mail.rewardAmount };
     }
 
-    // Check if has reward
-    if (!mail.rewardType || mail.rewardAmount <= 0) {
-      return { success: false, error: 'This mail has no reward' };
-    }
-
-    // Check if already claimed
-    if (mail.claimStatus === 'claimed') {
-      return { success: false, error: 'Reward already claimed' };
-    }
-
-    // Check if expired
-    if (mail.claimStatus === 'expired') {
-      return { success: false, error: 'Mail has expired' };
-    }
-
-    // Check expiry date
-    if (mail.expiresAt && new Date(mail.expiresAt) < new Date()) {
-      mail.claimStatus = 'expired';
-      this._save(this.accountManager.getAccount()?.id);
-      return { success: false, error: 'Mail has expired' };
-    }
-
-    // Process reward
+    // Fallback: claim locally
     if (mail.rewardType === 'diamond') {
-      const added = this.gameDataManager.addDiamonds(mail.rewardAmount, 'mail');
-      if (!added) {
-        return { success: false, error: 'Failed to add Diamonds' };
-      }
+      this.gameDataManager.addDiamonds(mail.rewardAmount, 'mail');
     }
-
-    // Mark as claimed
     mail.claimStatus = 'claimed';
     mail.read = true;
-    this._save(this.accountManager.getAccount()?.id);
-
-    this.events.emit('mail:claim', { mailId, rewardType: mail.rewardType, reward: mail.rewardAmount });
-    Logger.info('Mail', 'Claimed: ' + mail.title + ' — ' + mail.rewardAmount + ' ' + mail.rewardType);
-
+    this._save(account.id);
+    this.events.emit('mail:claim', { mailId, reward: mail.rewardAmount });
     return { success: true, reward: mail.rewardAmount };
   }
 
-  /**
-   * Delete a mail.
-   */
   deleteMail(mailId) {
     const index = this._mails.findIndex((m) => m.id === mailId);
     if (index === -1) return false;
-
     this._mails.splice(index, 1);
     this._save(this.accountManager.getAccount()?.id);
-    this.events.emit('mail:delete', { mailId });
     return true;
   }
 
-  /**
-   * Check and update expired mails.
-   */
   _checkExpiry() {
     const now = new Date();
-    let changed = false;
-
     this._mails.forEach((mail) => {
-      if (mail.claimStatus === 'unclaimed' && mail.expiresAt) {
-        if (new Date(mail.expiresAt) < now) {
-          mail.claimStatus = 'expired';
-          changed = true;
-          Logger.info('Mail', 'Expired: ' + mail.title);
-        }
+      if (mail.claimStatus === 'unclaimed' && mail.expiresAt && new Date(mail.expiresAt) < now) {
+        mail.claimStatus = 'expired';
       }
-    });
-
-    if (changed) {
-      this._save(this.accountManager.getAccount()?.id);
-    }
-  }
-
-  /**
-   * Auto-delete very old expired mails.
-   */
-  _cleanupExpired() {
-    const cutoff = new Date(Date.now() - MailConfig.AUTO_DELETE_EXPIRED_DAYS * 24 * 60 * 60 * 1000);
-    const before = this._mails.length;
-
-    this._mails = this._mails.filter((mail) => {
-      if (mail.claimStatus === 'expired' && new Date(mail.createdAt) < cutoff) {
-        return false;
-      }
-      return true;
-    });
-
-    if (this._mails.length !== before) {
-      this._save(this.accountManager.getAccount()?.id);
-      Logger.info('Mail', 'Cleaned up ' + (before - this._mails.length) + ' old expired mails');
-    }
-  }
-
-  _cleanupOldest() {
-    // Remove oldest read mails first
-    const readMails = this._mails.filter((m) => m.read && m.claimStatus !== 'unclaimed');
-    if (readMails.length > 0) {
-      const oldest = readMails[readMails.length - 1];
-      const index = this._mails.indexOf(oldest);
-      if (index > -1) this._mails.splice(index, 1);
-    }
-  }
-
-  _generateUUID() {
-    return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
-      const r = (Math.random() * 16) | 0;
-      const v = c === 'x' ? r : (r & 0x3) | 0x8;
-      return v.toString(16);
     });
   }
 
   _save(playerId) {
     if (!playerId) return;
-    const key = this._storageKey + ':' + playerId;
-    localStorage.setItem(key, JSON.stringify(this._mails));
+    localStorage.setItem(this._storageKey + ':' + playerId, JSON.stringify(this._mails));
   }
 
   _load(playerId) {
     try {
-      const key = this._storageKey + ':' + playerId;
-      const raw = localStorage.getItem(key);
+      const raw = localStorage.getItem(this._storageKey + ':' + playerId);
       return raw ? JSON.parse(raw) : [];
     } catch { return []; }
   }
