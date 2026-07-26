@@ -4,6 +4,27 @@
   display: flex;
   flex-direction: column;
   height: 100%;
+  background: url('/frog-mining/assets/images/bg-settings.png') center / cover no-repeat;
+  position: relative;
+}
+
+.settings-screen::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    180deg,
+    rgba(0, 0, 0, 0.3) 0%,
+    rgba(0, 0, 0, 0.15) 40%,
+    rgba(0, 0, 0, 0.25) 100%
+  );
+  pointer-events: none;
+  z-index: 0;
+}
+
+.settings-screen > * {
+  position: relative;
+  z-index: 1;
 }
 
 /* ── Header ── */
@@ -41,7 +62,7 @@
   font-weight: 700;
   color: var(--color-text-primary);
   text-align: center;
-  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
 }
 
 /* ── Content ── */
@@ -58,7 +79,7 @@
 /* ── Card ── */
 
 .settings-card {
-  background: rgba(0, 0, 0, 0.25);
+  background: rgba(0, 0, 0, 0.3);
   backdrop-filter: blur(8px);
   -webkit-backdrop-filter: blur(8px);
   border-radius: var(--radius-lg);
@@ -123,7 +144,54 @@
   font-weight: 600;
 }
 
-/* ── Toggle (see toggle.css) ── */
+/* ── Toggle ── */
+
+.toggle {
+  position: relative;
+  display: inline-block;
+  width: 48px;
+  height: 26px;
+  flex-shrink: 0;
+}
+
+.toggle input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.toggle-slider {
+  position: absolute;
+  cursor: pointer;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(255, 255, 255, 0.15);
+  border-radius: var(--radius-full);
+  transition: 0.3s;
+}
+
+.toggle-slider::before {
+  content: '';
+  position: absolute;
+  height: 20px;
+  width: 20px;
+  left: 3px;
+  bottom: 3px;
+  background-color: white;
+  border-radius: 50%;
+  transition: 0.3s;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+.toggle input:checked + .toggle-slider {
+  background-color: var(--color-accent-success);
+}
+
+.toggle input:checked + .toggle-slider::before {
+  transform: translateX(22px);
+}
 
 /* ── Logout Button ── */
 

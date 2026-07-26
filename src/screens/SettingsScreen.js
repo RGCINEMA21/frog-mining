@@ -3,7 +3,7 @@ import { showDialog } from '@ui/components/Dialog.js';
 import { Config } from '@core/Config.js';
 
 /**
- * SettingsScreen — Settings page matching design reference.
+ * SettingsScreen — Settings with background image.
  */
 export class SettingsScreen {
   constructor(eventBus) {
@@ -78,17 +78,14 @@ export class SettingsScreen {
 
     container.appendChild(this.el);
 
-    // Sound toggle
     this.el.querySelector('#toggle-sound').addEventListener('change', (e) => {
       this.events.emit('settings:soundToggle', e.target.checked);
     });
 
-    // Music toggle
     this.el.querySelector('#toggle-music').addEventListener('change', (e) => {
       this.events.emit('settings:musicToggle', e.target.checked);
     });
 
-    // Logout
     this.el.querySelector('#settings-logout').addEventListener('click', () => {
       showDialog({
         title: 'Keluar',
@@ -101,7 +98,6 @@ export class SettingsScreen {
       });
     });
 
-    // Back button (go home)
     this.el.querySelector('#settings-back').addEventListener('click', () => {
       this.events.emit('nav:change', '/');
     });
