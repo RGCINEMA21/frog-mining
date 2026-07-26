@@ -1,0 +1,52 @@
+@import url('https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700&family=Baloo+2:wght@600;700&display=swap');
+
+body {
+  font-family: var(--font-family-base);
+  font-size: var(--font-size-base);
+  color: var(--color-text-primary);
+  background-color: var(--color-bg-secondary);
+  overflow-x: hidden;
+  min-height: 100dvh;
+  -webkit-font-smoothing: antialiased;
+}
+
+#app {
+  width: 100%;
+  min-height: 100dvh;
+  display: flex;
+  flex-direction: column;
+  max-width: 480px;
+  margin: 0 auto;
+  position: relative;
+  background: linear-gradient(180deg, var(--color-bg-secondary) 0%, var(--color-bg-primary) 100%);
+}
+
+.screen {
+  width: 100%;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.screen-header {
+  padding: var(--space-md);
+  text-align: center;
+}
+
+.screen-header h1 {
+  font-family: var(--font-family-display);
+  font-size: var(--font-size-xl);
+  color: var(--color-text-primary);
+}
+
+.screen-content {
+  flex: 1;
+  padding: var(--space-md);
+  overflow-y: auto;
+}
+
+/* ── Selection ── */
+::selection {
+  background-color: var(--color-accent-gold);
+  color: var(--color-text-dark);
+}

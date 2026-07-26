@@ -1,0 +1,45 @@
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-xs);
+  padding: var(--space-sm) var(--space-md);
+  border-radius: var(--radius-md);
+  font-weight: 700;
+  font-size: var(--font-size-base);
+  cursor: pointer;
+  border: none;
+  transition: transform 0.1s ease, box-shadow 0.2s ease;
+  -webkit-tap-highlight-color: transparent;
+  white-space: nowrap;
+}
+
+.btn:active {
+  transform: scale(0.95);
+}
+
+.btn-primary {
+  background: var(--color-accent-success);
+  color: var(--color-text-dark);
+  box-shadow: var(--shadow-sm);
+}
+
+.btn-primary:hover {
+  box-shadow: var(--shadow-md);
+}
+
+.btn-gold {
+  background: linear-gradient(135deg, var(--color-accent-gold), var(--color-accent-gold-light));
+  color: var(--color-text-dark);
+  box-shadow: var(--shadow-glow-gold);
+}
+
+.btn-secondary {
+  background: transparent;
+  border: 2px solid var(--color-accent-success);
+  color: var(--color-accent-success);
+}
+
+.btn-icon {
+  font-size: 1.1em;
+}

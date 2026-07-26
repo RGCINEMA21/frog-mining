@@ -1,0 +1,44 @@
+.settings-group {
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: var(--radius-md);
+  margin-bottom: var(--space-md);
+  overflow: hidden;
+}
+
+.settings-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--space-md);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.settings-item:last-child {
+  border-bottom: none;
+}
+
+.settings-item.clickable {
+  cursor: pointer;
+}
+
+.settings-item.clickable:active {
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.settings-value {
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-sm);
+}
+
+.settings-arrow {
+  color: var(--color-text-muted);
+  font-size: var(--font-size-lg);
+}
+
+.logout-item {
+  color: var(--color-warning);
+}
+
+.logout-item:active {
+  background: rgba(244, 132, 95, 0.1);
+}

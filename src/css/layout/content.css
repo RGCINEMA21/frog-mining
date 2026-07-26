@@ -1,0 +1,6 @@
+.app-content {
+  flex: 1;
+  padding-bottom: calc(var(--bottom-nav-height) + var(--safe-area-bottom) + var(--space-md));
+  overflow-y: auto;
+  min-height: 0;
+}

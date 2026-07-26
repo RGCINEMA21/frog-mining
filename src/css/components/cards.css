@@ -1,0 +1,31 @@
+.shop-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: var(--space-md);
+}
+
+.shop-card {
+  background: var(--color-bg-card);
+  border-radius: var(--radius-lg);
+  padding: var(--space-md);
+  text-align: center;
+  box-shadow: var(--shadow-sm);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+}
+
+.shop-card-name {
+  font-weight: 700;
+  font-size: var(--font-size-base);
+}
+
+.shop-card-diamond {
+  font-size: var(--font-size-xl);
+  color: var(--color-accent-crystal);
+}
+
+.shop-card-price {
+  font-size: var(--font-size-sm);
+  color: var(--color-text-on-card);
+}
