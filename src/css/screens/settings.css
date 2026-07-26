@@ -52,7 +52,7 @@
 
 .settings-title {
   font-family: var(--font-family-display);
-  font-size: 20px;
+  font-size: 22px;
   font-weight: 700;
   color: var(--color-text-primary);
   text-align: center;
@@ -87,8 +87,8 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 0 16px;
-  height: 50px;
+  padding: 0 18px;
+  height: 54px;
 }
 
 .settings-row + .settings-row {
@@ -98,7 +98,7 @@
 .settings-row-left {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 12px;
   flex: 1;
   height: 100%;
 }
@@ -117,7 +117,7 @@
 
 .settings-row-label {
   font-weight: 600;
-  font-size: 14px;
+  font-size: 16px;
   color: var(--color-text-primary);
   line-height: 1;
 }
@@ -129,7 +129,7 @@
 }
 
 .settings-row-value {
-  font-size: 13px;
+  font-size: 14px;
   color: var(--color-text-secondary);
   font-weight: 500;
 }
