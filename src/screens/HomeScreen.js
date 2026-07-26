@@ -8,6 +8,7 @@ export class HomeScreen {
     this.events = eventBus;
     this.el = null;
     this._tapEnabled = true;
+    this._lastTap = 0;
   }
 
   show(container) {
@@ -34,7 +35,6 @@ export class HomeScreen {
       </div>
 
       <div class="home-bottom">
-        <!-- Auto Mining Status (when active) -->
         <div class="mining-status hidden" id="mining-status">
           <div class="mining-status-header">
             <span class="mining-status-icon">⛏️</span>
@@ -47,7 +47,6 @@ export class HomeScreen {
           <div class="mining-status-score">+1/sec • <span id="mining-total">0</span> score earned</div>
         </div>
 
-        <!-- Auto Mining Activation (when inactive) -->
         <div class="mining-activate" id="mining-activate">
           <div class="mining-activate-title">⛏️ Auto Mining</div>
           <div class="mining-activate-subtitle">Earn score while you sleep!</div>
@@ -57,21 +56,29 @@ export class HomeScreen {
     `;
     container.appendChild(this.el);
 
-    // Bind frog tap
+    // Bind frog tap — use mousedown for faster response
     const frog = this.el.querySelector('#frog-head');
-    frog.addEventListener('click', (e) => {
+    frog.addEventListener('mousedown', (e) => {
       e.preventDefault();
       this._handleTap();
     });
-    frog.addEventListener('touchend', (e) => {
+
+    frog.addEventListener('touchstart', (e) => {
       e.preventDefault();
-    });
+      this._handleTap();
+    }, { passive: false });
 
     Logger.debug('HomeScreen', 'Shown');
   }
 
   _handleTap() {
     if (!this._tapEnabled) return;
+
+    // Prevent double-tap (minimum 30ms between taps)
+    const now = Date.now();
+    if (now - this._lastTap < 30) return;
+    this._lastTap = now;
+
     this.events.emit('game:tap');
     this._animateFrog();
     this._animateFloatingPlus();
@@ -107,8 +114,6 @@ export class HomeScreen {
     setTimeout(() => glow.classList.remove('glow-pulse'), 200);
   }
 
-  // ═══ Score Updates ═══
-
   updateScore(score) {
     const el = this.el?.querySelector('#home-score');
     if (!el) return;
@@ -126,8 +131,6 @@ export class HomeScreen {
     const el = this.el?.querySelector('#home-diamond');
     if (el) el.textContent = '💎 ' + count.toLocaleString();
   }
-
-  // ═══ Auto Mining UI ═══
 
   showMiningPackages(packages, canAfford, onSelect) {
     const container = this.el?.querySelector('#mining-packages');
@@ -156,15 +159,12 @@ export class HomeScreen {
       </div>
     `).join('');
 
-    // Bind buttons
     container.querySelectorAll('.mining-buy-btn').forEach((btn) => {
       btn.addEventListener('click', (e) => {
         e.stopPropagation();
         const card = btn.closest('.mining-package');
         const pkgKey = card?.dataset.package;
-        if (pkgKey && !btn.disabled) {
-          onSelect(pkgKey);
-        }
+        if (pkgKey && !btn.disabled) onSelect(pkgKey);
       });
     });
   }
@@ -173,10 +173,8 @@ export class HomeScreen {
     const activate = this.el?.querySelector('#mining-activate');
     const statusEl = this.el?.querySelector('#mining-status');
     if (!activate || !statusEl) return;
-
     activate.classList.add('hidden');
     statusEl.classList.remove('hidden');
-
     this._updateMiningTimer(status.remainingMs, status.remainingFormatted);
   }
 
@@ -189,13 +187,11 @@ export class HomeScreen {
     const fill = this.el?.querySelector('#mining-fill');
     if (timer) timer.textContent = formatted;
     if (fill) {
-      // Get total duration from package
       const data = window.__game?.gameDataManager?.getData();
       const totalMs = data?.autoMining?.endTime
         ? (new Date(data.autoMining.endTime).getTime() - new Date(data.autoMining.startTime).getTime())
         : 1;
-      const pct = (remainingMs / totalMs) * 100;
-      fill.style.width = Math.max(0, pct) + '%';
+      fill.style.width = Math.max(0, (remainingMs / totalMs) * 100) + '%';
     }
   }
 
@@ -211,10 +207,7 @@ export class HomeScreen {
     if (status) status.classList.add('hidden');
   }
 
-  setTapEnabled(enabled) {
-    this._tapEnabled = enabled;
-  }
-
+  setTapEnabled(enabled) { this._tapEnabled = enabled; }
   hide() { this.el?.remove(); }
   destroy() { this.el?.remove(); }
 }
