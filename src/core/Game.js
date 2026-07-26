@@ -10,6 +10,7 @@ import { AutoMiningManager } from '@modules/gameplay/AutoMiningManager.js';
 import { SoundManager } from '@modules/gameplay/SoundManager.js';
 import { LeaderboardManager } from '@modules/leaderboard/LeaderboardManager.js';
 import { MailManager } from '@modules/mail/MailManager.js';
+import { checkAndSendGifts } from '@modules/mail/AdminGift.js';
 
 import { Header } from '@ui/layout/Header.js';
 import { BottomNav } from '@ui/layout/BottomNav.js';
@@ -34,7 +35,6 @@ export class Game {
     this.router = new Router(this.events);
     this.config = Config;
 
-    // Managers
     this.accountManager = new AccountManager(this.events);
     this.gameDataManager = new GameDataManager(this.events, this.accountManager);
     this.scoreManager = new ScoreManager(this.events, this.gameDataManager);
@@ -43,11 +43,9 @@ export class Game {
     this.leaderboardManager = new LeaderboardManager(this.events, this.gameDataManager, this.accountManager);
     this.mailManager = new MailManager(this.events, this.gameDataManager, this.accountManager);
 
-    // UI
     this.header = null;
     this.bottomNav = null;
     this.screenManager = null;
-
     this._running = false;
     this._account = null;
   }
@@ -99,6 +97,7 @@ export class Game {
     this.leaderboardManager.init();
     this.mailManager.init();
     this.soundManager.init();
+    checkAndSendGifts(this.mailManager, this.accountManager);
   }
 
   _startGame(app) {
@@ -131,7 +130,6 @@ export class Game {
 
     this.router.init(this.config.ROUTES);
 
-    // ═══ NAV ═══
     this.events.on('nav:change', (path) => this.router.navigate(path));
     this.events.on('route:change', ({ to }) => {
       this.bottomNav.setActive(to.path);
@@ -141,25 +139,23 @@ export class Game {
       if (to.name === 'mail') this._refreshMail(mail);
     });
 
-    // ═══ GAMEPLAY ═══
+    // Gameplay
     this.events.on('game:tap', () => {
       const result = this.scoreManager.processTap();
       if (result.success) this.soundManager.playTap();
     });
-
     this.events.on('game:tapProcessed', ({ score }) => {
       home.updateScore(score);
       this.header.updateRank(this.scoreManager.getRank());
       this.leaderboardManager.updateScore(score);
     });
-
     this.events.on('gamedata:scoreChange', ({ score }) => home.updateScore(score));
     this.events.on('gamedata:diamondChange', ({ diamonds }) => {
       this.header.updateDiamonds(diamonds);
       this._refreshAutoMiningUI(home);
     });
 
-    // ═══ AUTO MINING ═══
+    // Auto Mining
     this._setupAutoMiningUI(home);
     this.events.on('autoMining:activate', ({ package: pkg }) => {
       showPopup(pkg.label + ' activated! ⛏️', 'success');
@@ -179,19 +175,16 @@ export class Game {
     });
     this.events.on('autoMining:resume', (status) => home.showMiningActive(status));
 
-    // ═══ LEADERBOARD ═══
+    // Leaderboard
     this.events.on('leaderboard:requestUpdate', () => this._refreshLeaderboard(leaderboard));
     this.events.on('leaderboard:update', () => this._refreshLeaderboard(leaderboard));
 
-    // ═══ MAIL ═══
-    this.events.on('mail:new', () => {
-      this.header.updateMailCount(this.mailManager.getUnreadCount());
-    });
-
+    // Mail
+    this.events.on('mail:new', () => this.header.updateMailCount(this.mailManager.getUnreadCount()));
     this.events.on('mail:claimRequest', ({ mailId }) => {
       const result = this.mailManager.claimReward(mailId);
       if (result.success) {
-        showPopup('+' + result.reward + ' Diamond claimed!', 'success');
+        showPopup('+' + result.reward.toLocaleString() + ' Diamond claimed!', 'success');
         this.soundManager.playReward();
         this._refreshMail(mail);
       } else {
@@ -199,16 +192,12 @@ export class Game {
         this.soundManager.playError();
       }
     });
+    this.events.on('mail:claim', () => this.header.updateMailCount(this.mailManager.getUnreadCount()));
 
-    this.events.on('mail:claim', () => {
-      this.header.updateMailCount(this.mailManager.getUnreadCount());
-    });
-
-    // ═══ SETTINGS ═══
+    // Settings
     this.events.on('settings:logout', () => this.accountManager.logout());
     this.events.on('settings:soundToggle', (enabled) => this.soundManager.setEnabled(enabled));
 
-    // Init
     home.updateScore(this.scoreManager.getScore());
     this._updateProfile(profile);
     this._refreshLeaderboard(leaderboard);
@@ -226,8 +215,7 @@ export class Game {
   }
 
   _refreshMail(screen) {
-    const mails = this.mailManager.getMails();
-    screen.updateMails(mails);
+    screen.updateMails(this.mailManager.getMails());
   }
 
   _setupAutoMiningUI(home) {
