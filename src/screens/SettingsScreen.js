@@ -1,8 +1,9 @@
 import { Logger } from '@utils/logger.js';
 import { showDialog } from '@ui/components/Dialog.js';
+import { Config } from '@core/Config.js';
 
 /**
- * SettingsScreen — Settings with sound toggle and logout.
+ * SettingsScreen — Settings page matching design reference.
  */
 export class SettingsScreen {
   constructor(eventBus) {
@@ -14,76 +15,97 @@ export class SettingsScreen {
     this.el = document.createElement('div');
     this.el.className = 'screen settings-screen';
 
-    const header = document.createElement('div');
-    header.className = 'screen-header';
-    header.innerHTML = '<h1>⚙️ Settings</h1>';
+    this.el.innerHTML = `
+      <div class="settings-header">
+        <div class="settings-header-left">
+          <span class="settings-back" id="settings-back">‹</span>
+        </div>
+        <h1 class="settings-title">Pengaturan</h1>
+        <div class="settings-header-right"></div>
+      </div>
 
-    const content = document.createElement('div');
-    content.className = 'screen-content';
-    content.innerHTML = `
-      <div class="settings-group">
-        <div class="settings-item">
-          <span>🔊 Sound Effects</span>
-          <label class="toggle">
-            <input type="checkbox" checked id="toggle-sound">
-            <span class="toggle-slider"></span>
-          </label>
+      <div class="settings-content">
+        <div class="settings-card">
+          <div class="settings-row">
+            <div class="settings-row-left">
+              <span class="settings-row-icon">🔊</span>
+              <span class="settings-row-label">Suara</span>
+            </div>
+            <label class="toggle">
+              <input type="checkbox" checked id="toggle-sound">
+              <span class="toggle-slider"></span>
+            </label>
+          </div>
+
+          <div class="settings-row">
+            <div class="settings-row-left">
+              <span class="settings-row-icon">🎵</span>
+              <span class="settings-row-label">Musik</span>
+            </div>
+            <label class="toggle">
+              <input type="checkbox" id="toggle-music">
+              <span class="toggle-slider"></span>
+            </label>
+          </div>
         </div>
-        <div class="settings-item">
-          <span>🎵 Music</span>
-          <label class="toggle">
-            <input type="checkbox" id="toggle-music">
-            <span class="toggle-slider"></span>
-          </label>
+
+        <div class="settings-card">
+          <div class="settings-row">
+            <div class="settings-row-left">
+              <span class="settings-row-icon">🌐</span>
+              <span class="settings-row-label">Bahasa</span>
+            </div>
+            <div class="settings-row-right">
+              <span class="settings-row-value">Indonesia</span>
+              <span class="settings-row-arrow">›</span>
+            </div>
+          </div>
+
+          <div class="settings-row">
+            <div class="settings-row-left">
+              <span class="settings-row-icon">📋</span>
+              <span class="settings-row-label">Versi</span>
+            </div>
+            <span class="settings-row-value">${Config.APP.VERSION}</span>
+          </div>
         </div>
-      </div>
-      <div class="settings-group">
-        <div class="settings-item">
-          <span>🌐 Language</span>
-          <span class="settings-value">English</span>
-        </div>
-        <div class="settings-item">
-          <span>📱 Version</span>
-          <span class="settings-value">v0.1.0</span>
-        </div>
-      </div>
-      <div class="settings-group">
-        <div class="settings-item clickable" id="settings-about">
-          <span>ℹ️ About Frog Mining</span>
-          <span class="settings-arrow">›</span>
-        </div>
-      </div>
-      <div class="settings-group">
-        <div class="settings-item clickable logout-item" id="settings-logout">
-          <span>🚪 Logout</span>
-          <span class="settings-arrow">›</span>
-        </div>
+
+        <button class="settings-logout-btn" id="settings-logout">
+          Keluar
+        </button>
       </div>
     `;
 
+    container.appendChild(this.el);
+
     // Sound toggle
-    const soundToggle = content.querySelector('#toggle-sound');
-    soundToggle.addEventListener('change', (e) => {
+    this.el.querySelector('#toggle-sound').addEventListener('change', (e) => {
       this.events.emit('settings:soundToggle', e.target.checked);
     });
 
+    // Music toggle
+    this.el.querySelector('#toggle-music').addEventListener('change', (e) => {
+      this.events.emit('settings:musicToggle', e.target.checked);
+    });
+
     // Logout
-    const logoutBtn = content.querySelector('#settings-logout');
-    logoutBtn.addEventListener('click', () => {
+    this.el.querySelector('#settings-logout').addEventListener('click', () => {
       showDialog({
-        title: 'Logout',
-        message: 'Are you sure you want to logout? Your data will be saved.',
-        confirmLabel: 'Logout',
-        cancelLabel: 'Cancel',
+        title: 'Keluar',
+        message: 'Yakin ingin keluar? Data kamu akan tetap tersimpan.',
+        confirmLabel: 'Keluar',
+        cancelLabel: 'Batal',
         onConfirm: () => {
           this.events.emit('settings:logout');
         },
       });
     });
 
-    this.el.appendChild(header);
-    this.el.appendChild(content);
-    container.appendChild(this.el);
+    // Back button (go home)
+    this.el.querySelector('#settings-back').addEventListener('click', () => {
+      this.events.emit('nav:change', '/');
+    });
+
     Logger.debug('SettingsScreen', 'Shown');
   }
 
