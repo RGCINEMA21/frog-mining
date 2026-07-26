@@ -88,7 +88,7 @@
   align-items: center;
   justify-content: space-between;
   padding: 0 18px;
-  height: 54px;
+  height: 58px;
 }
 
 .settings-row + .settings-row {
@@ -117,7 +117,7 @@
 
 .settings-row-label {
   font-weight: 600;
-  font-size: 16px;
+  font-size: 18px;
   color: var(--color-text-primary);
   line-height: 1;
 }
@@ -129,7 +129,7 @@
 }
 
 .settings-row-value {
-  font-size: 14px;
+  font-size: 16px;
   color: var(--color-text-secondary);
   font-weight: 500;
 }
