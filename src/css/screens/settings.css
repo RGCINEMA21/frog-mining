@@ -58,7 +58,7 @@
 
 .settings-title {
   font-family: var(--font-family-display);
-  font-size: var(--font-size-xl);
+  font-size: 20px;
   font-weight: 700;
   color: var(--color-text-primary);
   text-align: center;
@@ -93,8 +93,8 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: var(--space-md);
-  min-height: 52px;
+  padding: 14px 16px;
+  min-height: 48px;
 }
 
 .settings-row + .settings-row {
@@ -104,42 +104,43 @@
 .settings-row-left {
   display: flex;
   align-items: center;
-  gap: var(--space-md);
+  gap: 12px;
   flex: 1;
 }
 
 .settings-row-icon {
-  font-size: 20px;
-  width: 32px;
-  height: 32px;
+  font-size: 18px;
+  width: 30px;
+  height: 30px;
   display: flex;
   align-items: center;
   justify-content: center;
   background: rgba(255, 255, 255, 0.08);
-  border-radius: var(--radius-sm);
+  border-radius: 8px;
   flex-shrink: 0;
 }
 
 .settings-row-label {
   font-weight: 600;
-  font-size: var(--font-size-base);
+  font-size: 15px;
   color: var(--color-text-primary);
+  line-height: 1.3;
 }
 
 .settings-row-right {
   display: flex;
   align-items: center;
-  gap: var(--space-xs);
+  gap: 4px;
 }
 
 .settings-row-value {
-  font-size: var(--font-size-sm);
+  font-size: 14px;
   color: var(--color-text-secondary);
   font-weight: 500;
 }
 
 .settings-row-arrow {
-  font-size: 20px;
+  font-size: 18px;
   color: var(--color-text-muted);
   font-weight: 600;
 }
@@ -149,7 +150,7 @@
 .toggle {
   position: relative;
   display: inline-block;
-  width: 48px;
+  width: 46px;
   height: 26px;
   flex-shrink: 0;
 }
@@ -168,7 +169,7 @@
   right: 0;
   bottom: 0;
   background-color: rgba(255, 255, 255, 0.15);
-  border-radius: var(--radius-full);
+  border-radius: 13px;
   transition: 0.3s;
 }
 
@@ -190,20 +191,20 @@
 }
 
 .toggle input:checked + .toggle-slider::before {
-  transform: translateX(22px);
+  transform: translateX(20px);
 }
 
 /* ── Logout Button ── */
 
 .settings-logout-btn {
   width: 100%;
-  padding: var(--space-md) var(--space-lg);
+  padding: 14px;
   background: var(--color-accent-error);
   color: white;
   border: none;
   border-radius: var(--radius-lg);
   font-family: var(--font-family-display);
-  font-size: var(--font-size-lg);
+  font-size: 17px;
   font-weight: 700;
   cursor: pointer;
   transition: transform 0.15s ease, opacity 0.15s ease;
