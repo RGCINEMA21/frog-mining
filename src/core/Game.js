@@ -94,11 +94,16 @@ export class Game {
   }
 
   async _handleLogin(app, email, password) {
-    const result = await this.accountManager.login(email, password);
-    if (!result.success) { showPopup(result.error, 'error'); return; }
-    this._account = result.account;
-    this._initManagers();
-    this._startGame(app);
+    try {
+      const result = await this.accountManager.login(email, password);
+      if (!result.success) { showPopup(result.error || 'Login gagal', 'error'); return; }
+      this._account = result.account;
+      await this._initManagers();
+      await this._startGame(app);
+    } catch (err) {
+      Logger.error('Game', 'Login failed', err);
+      showPopup('Login gagal. Coba lagi.', 'error');
+    }
   }
 
   async _initManagers() {
