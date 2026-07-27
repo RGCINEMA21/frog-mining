@@ -132,7 +132,7 @@ export class LandingScreen {
   _updateMode() {
     const isRegister = this._mode === 'register';
     this._usernameGroup.style.display = isRegister ? 'block' : 'none';
-    this._btnEl.el.querySelector('button').textContent = isRegister ? '🎮  Daftar' : '🎮  Masuk';
+    this._btnEl.textContent = isRegister ? '🎮  Daftar' : '🎮  Masuk';
     this._toggleEl.querySelector('.landing-toggle-text').textContent = isRegister ? 'Sudah punya akun?' : 'Belum punka akun?';
     this._toggleEl.querySelector('#toggle-mode').textContent = isRegister ? 'Masuk' : 'Daftar';
     this._clearError();
