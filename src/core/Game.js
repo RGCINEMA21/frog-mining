@@ -86,11 +86,20 @@ export class Game {
   }
 
   async _handleRegister(app, username, email, password) {
-    const result = this.accountManager.register(username);
-    if (!result.success) { showPopup(result.error, 'error'); return; }
-    this._account = result.account;
-    this._initManagers();
-    this._startGame(app);
+    try {
+      const result = await this.accountManager.register(username, email, password);
+      if (!result.success) {
+        showPopup(result.error || 'Gagal membuat akun', 'error');
+        return;
+      }
+      showPopup('Akun berhasil dibuat! Silakan masuk.', 'success');
+      setTimeout(() => {
+        this.events.emit('landing:showLogin', { email });
+      }, 1500);
+    } catch (err) {
+      Logger.error('Game', 'Register failed', err);
+      showPopup('Gagal membuat akun. Coba lagi.', 'error');
+    }
   }
 
   async _handleLogin(app, email, password) {
