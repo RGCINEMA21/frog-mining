@@ -3,8 +3,7 @@ import { Logger } from '@utils/logger.js';
 import { Api } from '@utils/api.js';
 
 /**
- * AccountManager — Handles player account lifecycle via API.
- * Falls back to localStorage when server is unavailable.
+ * AccountManager — Email/password auth with API + localStorage fallback.
  */
 export class AccountManager {
   constructor(eventBus) {
@@ -24,57 +23,39 @@ export class AccountManager {
         return { hasAccount: true, account };
       }
       return { hasAccount: false, account: null };
-    } catch (err) {
-      Logger.error('Account', 'Session check failed', err);
+    } catch {
       return { hasAccount: false, account: null };
     }
   }
 
-  async register(username) {
-    const validation = this.validateUsername(username);
-    if (!validation.valid) {
-      return { success: false, error: validation.error };
-    }
-
-    const trimmed = username.trim();
-
+  async register(username, email, password) {
     // Try API first
-    const result = await Api.register(trimmed);
+    const result = await Api.register(username, email, password);
     if (result.success) {
-      const player = result.data.player;
+      const p = result.data.player;
       const account = {
-        id: player.id,
-        username: player.username,
-        avatar: player.avatar,
-        totalScore: player.total_score,
-        totalDiamond: player.total_diamonds,
-        createdAt: player.created_at,
-        lastLoginAt: player.last_login,
-        accountStatus: player.status,
+        id: p.id, username: p.username, email: email, avatar: p.avatar,
+        totalScore: p.total_score, totalDiamond: p.total_diamonds,
+        createdAt: p.created_at, lastLoginAt: p.last_login, accountStatus: p.status,
       };
       this._account = account;
       this._save(this._storageKey, account);
       this._save(this._sessionKey, { active: true, playerId: account.id });
-      Logger.info('Account', 'Registered via API: ' + trimmed);
+      Logger.info('Account', 'Registered: ' + username);
       this.events.emit('account:register', account);
       return { success: true, account };
     }
 
-    // Check if error is "username taken" (server reachable but conflict)
-    if (result.error && result.error.includes('already taken')) {
-      return { success: false, error: 'Username already taken' };
+    if (result.error && (result.error.includes('sudah digunakan') || result.error.includes('sudah terdaftar'))) {
+      return { success: false, error: result.error };
     }
 
-    // Offline fallback — create locally
+    // Offline fallback
     Logger.warn('Account', 'API unavailable, registering offline');
     const account = {
-      id: this._generateUUID(),
-      username: trimmed,
-      avatar: '🐸',
-      totalScore: 0,
-      totalDiamond: 0,
-      createdAt: new Date().toISOString(),
-      lastLoginAt: new Date().toISOString(),
+      id: this._generateUUID(), username, email, avatar: '🐸',
+      totalScore: 0, totalDiamond: 0,
+      createdAt: new Date().toISOString(), lastLoginAt: new Date().toISOString(),
       accountStatus: 'active',
     };
     this._account = account;
@@ -82,6 +63,26 @@ export class AccountManager {
     this._save(this._sessionKey, { active: true, playerId: account.id });
     this.events.emit('account:register', account);
     return { success: true, account };
+  }
+
+  async login(email, password) {
+    const result = await Api.login(email, password);
+    if (result.success) {
+      const p = result.data.player;
+      const account = {
+        id: p.id, username: p.username, email: email, avatar: p.avatar,
+        totalScore: p.total_score, totalDiamond: p.total_diamonds,
+        createdAt: p.created_at, lastLoginAt: p.last_login, accountStatus: p.status,
+      };
+      this._account = account;
+      this._save(this._storageKey, account);
+      this._save(this._sessionKey, { active: true, playerId: account.id });
+      Logger.info('Account', 'Logged in: ' + p.username);
+      this.events.emit('account:login', account);
+      return { success: true, account };
+    }
+
+    return { success: false, error: result.error || 'Login gagal' };
   }
 
   async syncSession() {
@@ -92,17 +93,6 @@ export class AccountManager {
       this._account.totalScore = p.total_score;
       this._account.totalDiamond = p.total_diamonds;
       this._save(this._storageKey, this._account);
-    }
-  }
-
-  logout() {
-    try {
-      this._remove(this._sessionKey);
-      this._account = null;
-      Logger.info('Account', 'Logged out');
-      this.events.emit('account:logout');
-    } catch (err) {
-      Logger.error('Account', 'Logout failed', err);
     }
   }
 
@@ -120,26 +110,21 @@ export class AccountManager {
   }
 
   validateUsername(username) {
-    if (!username || typeof username !== 'string') {
-      return { valid: false, error: 'Username is required' };
-    }
-    const trimmed = username.trim();
-    if (trimmed.length === 0) return { valid: false, error: 'Username cannot be empty' };
-    if (trimmed.length < 3) return { valid: false, error: 'Username must be at least 3 characters' };
-    if (trimmed.length > 20) return { valid: false, error: 'Username must be 20 characters or less' };
-    if (!/^[a-zA-Z0-9]+$/.test(trimmed)) return { valid: false, error: 'Username can only contain letters and numbers' };
+    if (!username || typeof username !== 'string') return { valid: false, error: 'Username wajib diisi' };
+    const t = username.trim();
+    if (t.length < 3) return { valid: false, error: 'Username minimal 3 karakter' };
+    if (t.length > 20) return { valid: false, error: 'Username maksimal 20 karakter' };
+    if (!/^[a-zA-Z0-9_]+$/.test(t)) return { valid: false, error: 'Username hanya huruf, angka, underscore' };
     return { valid: true };
   }
 
   _generateUUID() {
     return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, (c) => {
       const r = (Math.random() * 16) | 0;
-      const v = c === 'x' ? r : (r & 0x3) | 0x8;
-      return v.toString(16);
+      return (c === 'x' ? r : (r & 0x3) | 0x8).toString(16);
     });
   }
 
   _save(key, data) { localStorage.setItem(key, JSON.stringify(data)); }
   _load(key) { try { const r = localStorage.getItem(key); return r ? JSON.parse(r) : null; } catch { return null; } }
-  _remove(key) { localStorage.removeItem(key); }
 }

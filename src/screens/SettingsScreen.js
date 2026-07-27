@@ -1,5 +1,4 @@
 import { Logger } from '@utils/logger.js';
-import { showDialog } from '@ui/components/Dialog.js';
 import { Config } from '@core/Config.js';
 
 /**
@@ -69,10 +68,6 @@ export class SettingsScreen {
             <span class="settings-row-value">${Config.APP.VERSION}</span>
           </div>
         </div>
-
-        <button class="settings-logout-btn" id="settings-logout">
-          Keluar
-        </button>
       </div>
     `;
 
@@ -84,18 +79,6 @@ export class SettingsScreen {
 
     this.el.querySelector('#toggle-music').addEventListener('change', (e) => {
       this.events.emit('settings:musicToggle', e.target.checked);
-    });
-
-    this.el.querySelector('#settings-logout').addEventListener('click', () => {
-      showDialog({
-        title: 'Keluar',
-        message: 'Yakin ingin keluar? Data kamu akan tetap tersimpan.',
-        confirmLabel: 'Keluar',
-        cancelLabel: 'Batal',
-        onConfirm: () => {
-          this.events.emit('settings:logout');
-        },
-      });
     });
 
     this.el.querySelector('#settings-back').addEventListener('click', () => {

@@ -30,8 +30,12 @@ export const Api = {
   },
 
   // Auth
-  register(username) {
-    return this._request('POST', '/api/auth/register', { username });
+  register(username, email, password) {
+    return this._request('POST', '/api/auth/register', { username, email, password });
+  },
+
+  login(email, password) {
+    return this._request('POST', '/api/auth/login', { email, password });
   },
 
   getSession(playerId) {

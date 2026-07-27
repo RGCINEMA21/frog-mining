@@ -57,7 +57,10 @@ export class Game {
 
     const splash = new SplashScreen(this.events);
     this.events.on('splash:complete', () => this._checkAndRoute(app));
-    this.events.on('landing:start', ({ username }) => this._handleRegister(app, username));
+    this.events.on('landing:start', (data) => {
+      if (data.mode === 'login') this._handleLogin(app, data.email, data.password);
+      else this._handleRegister(app, data.username, data.email, data.password);
+    });
     this.events.on('account:logout', () => { this._account = null; this._showLanding(app); });
 
     splash.show(app);
@@ -82,8 +85,16 @@ export class Game {
     landing.show(app);
   }
 
-  async _handleRegister(app, username) {
+  async _handleRegister(app, username, email, password) {
     const result = this.accountManager.register(username);
+    if (!result.success) { showPopup(result.error, 'error'); return; }
+    this._account = result.account;
+    this._initManagers();
+    this._startGame(app);
+  }
+
+  async _handleLogin(app, email, password) {
+    const result = await this.accountManager.login(email, password);
     if (!result.success) { showPopup(result.error, 'error'); return; }
     this._account = result.account;
     this._initManagers();
@@ -196,7 +207,7 @@ export class Game {
     this.events.on('mail:claim', () => this.header.updateMailCount(this.mailManager.getUnreadCount()));
 
     // Settings
-    this.events.on('settings:logout', () => this.accountManager.logout());
+
     this.events.on('settings:soundToggle', (enabled) => this.soundManager.setEnabled(enabled));
 
     home.updateScore(this.scoreManager.getScore());

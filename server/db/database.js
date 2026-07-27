@@ -2,22 +2,26 @@ import Database from 'better-sqlite3';
 import { dirname, join } from 'path';
 import { fileURLToPath } from 'url';
 import { mkdirSync } from 'fs';
+import { createHash } from 'crypto';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const dbDir = join(__dirname, '../../data');
 mkdirSync(dbDir, { recursive: true });
 
 const db = new Database(join(dbDir, 'frog-mining.db'));
-
-// Enable WAL mode for better concurrent read performance
 db.pragma('journal_mode = WAL');
 db.pragma('foreign_keys = ON');
 
-// Create tables
+export function hashPassword(password) {
+  return createHash('sha256').update('frog_salt_' + password).digest('hex');
+}
+
 db.exec(`
   CREATE TABLE IF NOT EXISTS players (
     id TEXT PRIMARY KEY,
     username TEXT UNIQUE NOT NULL,
+    email TEXT UNIQUE,
+    password_hash TEXT,
     avatar TEXT DEFAULT '🐸',
     total_score INTEGER DEFAULT 0,
     total_diamonds INTEGER DEFAULT 0,
@@ -123,26 +127,19 @@ db.exec(`
   );
 `);
 
-// Seed default shop products
-const productCount = db.prepare('SELECT COUNT(*) as count FROM shop_products').get();
-if (productCount.count === 0) {
-  const insertProduct = db.prepare(
-    'INSERT INTO shop_products (id, name, diamond_amount, bonus_diamond, price, currency) VALUES (?, ?, ?, ?, ?, ?)'
-  );
-  insertProduct.run('starter', 'Starter', 10, 0, 'Rp 5.000', 'IDR');
-  insertProduct.run('basic', 'Basic', 50, 5, 'Rp 20.000', 'IDR');
-  insertProduct.run('mega', 'Mega', 200, 30, 'Rp 50.000', 'IDR');
-  insertProduct.run('ultimate', 'Ultimate', 500, 100, 'Rp 100.000', 'IDR');
-  insertProduct.run('royal', 'Royal', 1500, 400, 'Rp 250.000', 'IDR');
+// Seed products
+const pc = db.prepare('SELECT COUNT(*) as count FROM shop_products').get();
+if (pc.count === 0) {
+  const ins = db.prepare('INSERT INTO shop_products (id, name, diamond_amount, bonus_diamond, price, currency) VALUES (?, ?, ?, ?, ?, ?)');
+  ins.run('starter', 'Starter', 10, 0, 'Rp 5.000', 'IDR');
+  ins.run('basic', 'Basic', 50, 5, 'Rp 20.000', 'IDR');
+  ins.run('mega', 'Mega', 200, 30, 'Rp 50.000', 'IDR');
+  ins.run('ultimate', 'Ultimate', 500, 100, 'Rp 100.000', 'IDR');
+  ins.run('royal', 'Royal', 1500, 400, 'Rp 250.000', 'IDR');
 }
 
-// Seed default system settings
-const settingsCount = db.prepare('SELECT COUNT(*) as count FROM system_settings').get();
-if (settingsCount.count === 0) {
-  const insertSetting = db.prepare('INSERT INTO system_settings (key, value) VALUES (?, ?)');
-  insertSetting.run('auto_mining_score_per_second', '1');
-  insertSetting.run('mail_expiry_days', '30');
-  insertSetting.run('maintenance_mode', 'false');
-}
+// Add email/password columns if missing (migration)
+try { db.exec("ALTER TABLE players ADD COLUMN email TEXT"); } catch {}
+try { db.exec("ALTER TABLE players ADD COLUMN password_hash TEXT"); } catch {}
 
 export default db;
