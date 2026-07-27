@@ -116,6 +116,15 @@ export class LandingScreen {
       this._updateMode();
     });
 
+    // Listen for switch to login after register success
+    this.events.on('landing:showLogin', ({ email }) => {
+      this._mode = 'login';
+      this._email = email || '';
+      this._updateMode();
+      if (this._emailInput) this._emailInput.value = this._email;
+      if (this._passwordInput) { this._passwordInput.value = ''; this._passwordInput.focus(); }
+    });
+
     this._updateMode();
     Logger.debug('LandingScreen', 'Shown');
   }
