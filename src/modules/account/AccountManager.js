@@ -29,60 +29,57 @@ export class AccountManager {
   }
 
   async register(username, email, password) {
-    // Try API first
-    const result = await Api.register(username, email, password);
-    if (result.success) {
-      const p = result.data.player;
-      const account = {
-        id: p.id, username: p.username, email: email, avatar: p.avatar,
-        totalScore: p.total_score, totalDiamond: p.total_diamonds,
-        createdAt: p.created_at, lastLoginAt: p.last_login, accountStatus: p.status,
-      };
-      this._account = account;
-      this._save(this._storageKey, account);
-      this._save(this._sessionKey, { active: true, playerId: account.id });
-      Logger.info('Account', 'Registered: ' + username);
-      this.events.emit('account:register', account);
-      return { success: true, account };
+    // Check local storage for duplicate email
+    const accounts = this._loadAllAccounts();
+    const existEmail = accounts.find((a) => a.email === email.trim().toLowerCase());
+    if (existEmail) {
+      return { success: false, error: 'Email sudah terdaftar' };
+    }
+    const existUser = accounts.find((a) => a.username === username.trim());
+    if (existUser) {
+      return { success: false, error: 'Username sudah digunakan' };
     }
 
-    if (result.error && (result.error.includes('sudah digunakan') || result.error.includes('sudah terdaftar'))) {
-      return { success: false, error: result.error };
-    }
-
-    // Offline fallback
-    Logger.warn('Account', 'API unavailable, registering offline');
     const account = {
-      id: this._generateUUID(), username, email, avatar: '🐸',
-      totalScore: 0, totalDiamond: 0,
+      id: this._generateUUID(), username: username.trim(), email: email.trim().toLowerCase(),
+      avatar: '🐸', password: password, totalScore: 0, totalDiamond: 0,
       createdAt: new Date().toISOString(), lastLoginAt: new Date().toISOString(),
       accountStatus: 'active',
     };
+
     this._account = account;
     this._save(this._storageKey, account);
     this._save(this._sessionKey, { active: true, playerId: account.id });
+    this._saveAccount(account);
+
+    // Try API sync in background (no blocking)
+    Api.register(username, email, password).catch(() => {});
+
+    Logger.info('Account', 'Registered: ' + username);
     this.events.emit('account:register', account);
     return { success: true, account };
   }
 
   async login(email, password) {
-    const result = await Api.login(email, password);
-    if (result.success) {
-      const p = result.data.player;
-      const account = {
-        id: p.id, username: p.username, email: email, avatar: p.avatar,
-        totalScore: p.total_score, totalDiamond: p.total_diamonds,
-        createdAt: p.created_at, lastLoginAt: p.last_login, accountStatus: p.status,
-      };
-      this._account = account;
-      this._save(this._storageKey, account);
-      this._save(this._sessionKey, { active: true, playerId: account.id });
-      Logger.info('Account', 'Logged in: ' + p.username);
-      this.events.emit('account:login', account);
-      return { success: true, account };
+    const accounts = this._loadAllAccounts();
+    const account = accounts.find((a) => a.email === email.trim().toLowerCase());
+
+    if (!account) {
+      return { success: false, error: 'Email tidak ditemukan' };
+    }
+    if (account.password !== password) {
+      return { success: false, error: 'Password salah' };
     }
 
-    return { success: false, error: result.error || 'Login gagal' };
+    this._account = { ...account, password: undefined };
+    account.lastLoginAt = new Date().toISOString();
+    this._save(this._storageKey, account);
+    this._save(this._sessionKey, { active: true, playerId: account.id });
+    this._saveAccount(account);
+
+    Logger.info('Account', 'Logged in: ' + account.username);
+    this.events.emit('account:login', account);
+    return { success: true, account };
   }
 
   async syncSession() {
@@ -116,6 +113,21 @@ export class AccountManager {
     if (t.length > 20) return { valid: false, error: 'Username maksimal 20 karakter' };
     if (!/^[a-zA-Z0-9_]+$/.test(t)) return { valid: false, error: 'Username hanya huruf, angka, underscore' };
     return { valid: true };
+  }
+
+  _loadAllAccounts() {
+    try {
+      const raw = localStorage.getItem(Config.STORAGE_KEY + ':accounts');
+      return raw ? JSON.parse(raw) : [];
+    } catch { return []; }
+  }
+
+  _saveAccount(account) {
+    const accounts = this._loadAllAccounts();
+    const idx = accounts.findIndex((a) => a.id === account.id);
+    if (idx >= 0) accounts[idx] = account;
+    else accounts.push(account);
+    localStorage.setItem(Config.STORAGE_KEY + ':accounts', JSON.stringify(accounts));
   }
 
   _generateUUID() {
