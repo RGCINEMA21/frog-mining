@@ -208,7 +208,6 @@ export class Game {
   }
 
   async _refreshLeaderboard(screen) {
-    await this.leaderboardManager.updateScore(this.scoreManager.getScore());
     ['daily', 'weekly', 'monthly'].forEach((period) => {
       const board = this.leaderboardManager.getBoard(period);
       screen.updateBoard({ period, board });
