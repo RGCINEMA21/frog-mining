@@ -68,6 +68,8 @@ export class SettingsScreen {
             <span class="settings-row-value">${Config.APP.VERSION}</span>
           </div>
         </div>
+
+        <button class="settings-logout-btn" id="settings-logout">Keluar</button>
       </div>
     `;
 
@@ -83,6 +85,11 @@ export class SettingsScreen {
 
     this.el.querySelector('#settings-back').addEventListener('click', () => {
       this.events.emit('nav:change', '/');
+    });
+
+    this.el.querySelector('#settings-logout').addEventListener('click', () => {
+      localStorage.clear();
+      window.location.reload();
     });
 
     Logger.debug('SettingsScreen', 'Shown');
