@@ -18,6 +18,16 @@ export class AccountManager {
       const session = this._load(this._sessionKey);
       const account = this._load(this._storageKey);
       if (session && session.active && account && account.id) {
+        // Validate with server in background — clear if not found
+        Api.getSession(account.id).then((result) => {
+          if (!result.success) {
+            Logger.warn('Account', 'Session invalid on server, clearing');
+            this._remove(this._sessionKey);
+            this._remove(this._storageKey);
+            this._account = null;
+            window.location.reload();
+          }
+        }).catch(() => {}); // offline — keep local session
         this._account = account;
         Logger.info('Account', 'Session found: ' + account.username);
         return { hasAccount: true, account };
