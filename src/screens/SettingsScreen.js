@@ -88,7 +88,8 @@ export class SettingsScreen {
     });
 
     this.el.querySelector('#settings-logout').addEventListener('click', () => {
-      localStorage.clear();
+      const keys = Object.keys(localStorage).filter(k => !k.includes(':accounts'));
+      keys.forEach(k => localStorage.removeItem(k));
       window.location.reload();
     });
 
