@@ -72,19 +72,16 @@ export class MailManager {
   getUnreadCount() { return this._mails.filter((m) => !m.read).length; }
   getUnclaimedCount() { return this._mails.filter((m) => m.rewardType && m.rewardAmount > 0 && m.claimStatus === 'unclaimed').length; }
 
-  async createMail({ title, content, category = 'announcement', rewardType = null, rewardAmount = 0, expiryDays = null }) {
+  createMail({ title, content, category = 'announcement', rewardType = null, rewardAmount = 0, expiryDays = null }) {
     const account = this.accountManager.getAccount();
     if (!account) return null;
-
-    // Create on server
-    const result = await Api.createMail(account.id, title, content, category, rewardType, rewardAmount);
 
     const now = new Date();
     const expiry = expiryDays ?? MailConfig.DEFAULT_EXPIRY_DAYS;
     const expiresAt = expiry > 0 ? new Date(now.getTime() + expiry * 24 * 60 * 60 * 1000).toISOString() : null;
 
     const mail = {
-      id: result.success ? result.data.mailId : this._generateUUID(),
+      id: this._generateUUID(),
       playerId: account.id,
       title,
       content,
@@ -100,6 +97,10 @@ export class MailManager {
     this._mails.unshift(mail);
     this._save(account.id);
     this.events.emit('mail:new', { mail });
+
+    // Try API sync in background
+    Api.createMail(account.id, title, content, category, rewardType, rewardAmount).catch(() => {});
+
     return mail;
   }
 

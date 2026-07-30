@@ -120,7 +120,7 @@ export class Game {
     this.scoreManager.init();
     this.autoMiningManager.init();
     this.leaderboardManager.init();
-    this.mailManager.init();
+    await this.mailManager.init();
     this.soundManager.init();
     await checkAndSendGifts(this.mailManager, this.accountManager);
     this.accountManager.syncSession();
